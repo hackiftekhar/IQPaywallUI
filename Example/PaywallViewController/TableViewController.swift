@@ -42,9 +42,10 @@ class TableViewController: UITableViewController {
                                                     ))
         )
 
-        configuration.productIds = ["com.infoenum.ruler.monthly",
-                                    "com.infoenum.ruler.yearly",
-                                    "com.infoenum.ruler.one_time_purchase"
+        configuration.productIds = [
+//            "com.infoenum.ruler.monthly",
+//            "com.infoenum.ruler.yearly",
+            "com.infoenum.ruler.one_time_purchase"
         ]
         configuration.recommendedProductId = "com.infoenum.ruler.yearly"
 

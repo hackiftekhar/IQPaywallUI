@@ -12,6 +12,7 @@ struct CardProductView: View {
     let tintColor: Color
     @Binding var selectedProductId: String?
     let isActive: Bool
+    let isOnlyAvailableProduct: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -78,7 +79,7 @@ struct CardProductView: View {
                     .offset(y: -8)
             }
         }
-        .scaleEffect(product.id == selectedProductId ? 1.1 : 1.0)
+        .scaleEffect((product.id == selectedProductId && !isOnlyAvailableProduct) ? 1.1 : 1.0)
         .animation(.easeInOut(duration: 0.1), value: product.id == selectedProductId)
     }
 

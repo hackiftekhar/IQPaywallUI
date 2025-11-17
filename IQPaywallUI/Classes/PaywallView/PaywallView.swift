@@ -72,7 +72,9 @@ public struct PaywallView: View {
                                                                 productStyle: productStyle,
                                                                 tintColor: Color(uiColor: configuration.tintColor),
                                                                 selectedProductId: $viewModel.selectedProductId,
-                                                                isActive: PurchaseStatusManager.shared.isActive(productID: product.id))
+                                                                isActive: PurchaseStatusManager.shared.isActive(productID: product.id),
+                                                                isOnlyAvailableProduct: configuration.productIds.count <= 1
+                                                )
                                             }
                                         }
                                         .padding(.vertical)
