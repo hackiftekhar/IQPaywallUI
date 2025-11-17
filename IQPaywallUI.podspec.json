@@ -1,0 +1,44 @@
+{
+    "name": "IQPaywallUI",
+    "version": "0.0.1",
+    "source": {
+        "git": "https://github.com/hackiftekhar/IQPaywallUI.git",
+        "tag": "0.0.1"
+    },
+    "summary": "Paywall Screen",
+    "description": "This contains Paywall screen which you can use directly to integrate in app purchase basic features.",
+    "homepage": "https://github.com/hackiftekhar/IQPaywallUI",
+    "screenshots": "https://raw.githubusercontent.com/hackiftekhar/PaywallUI/master/Screenshot/IQPaywallUIScreenshot.png",
+    "license": {
+        "type": "MIT",
+        "file": "LICENSE"
+    },
+    "authors": {
+        "Iftekhar Qurashi": "hack.iftekhar@gmail.com"
+    },
+    "platforms": {
+        "ios": "15.0"
+    },
+    "swift_versions": [
+        "5.7",
+        "5.8",
+        "5.9"
+    ],
+    "source_files": [
+        "IQPaywallUI/Classes/**/*.{swift}"
+    ],
+    "resource_bundles": {
+        "IQPaywallViewController": "IQPaywallUI/Assets/**/*"
+    },
+    "frameworks": [
+        "SwiftUI",
+        "UIKit",
+        "StoreKit",
+        "Security",
+        "CryptoKit"
+    ],
+    "xcconfig": {
+        "ENABLE_USER_SCRIPT_SANDBOXING": "NO"
+    },
+    "requires_arc": true
+}

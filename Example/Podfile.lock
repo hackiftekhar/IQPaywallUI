@@ -1,0 +1,23 @@
+PODS:
+  - IQPaywallUI (0.0.1)
+  - SwiftLint (0.62.2)
+
+DEPENDENCIES:
+  - IQPaywallUI (from `../`)
+  - SwiftLint
+
+SPEC REPOS:
+  trunk:
+    - SwiftLint
+
+EXTERNAL SOURCES:
+  IQPaywallUI:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  IQPaywallUI: 75b4f94e9bc17f26159067ac62a9cafdde015321
+  SwiftLint: f84fc7d844e9cde0dc4f5013af608a269e317aba
+
+PODFILE CHECKSUM: 3f1f053b183229f40600326e6e27a3a0cdf1df9c
+
+COCOAPODS: 1.16.2

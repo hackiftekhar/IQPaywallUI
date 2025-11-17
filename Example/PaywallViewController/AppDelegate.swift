@@ -6,14 +6,19 @@
 //
 
 import UIKit
+import IQPaywallUI
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+
+        IQPaywallUI.configure(productIds: [
+            "com.infoenum.ruler.monthly",
+            "com.infoenum.ruler.yearly",
+            "com.infoenum.ruler.one_time_purchase"
+        ])
+
         return true
     }
 

@@ -6,47 +6,66 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BD6C0A06E8AA586A4F000AAC /* Pods_PaywallViewController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F38894586A6EAF85BDDD918F /* Pods_PaywallViewController.framework */; };
+		C0EBFFBB2EC74D80000B0149 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EBFFB12EC74D80000B0149 /* AppDelegate.swift */; };
+		C0EBFFBC2EC74D80000B0149 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EBFFB82EC74D80000B0149 /* SceneDelegate.swift */; };
+		C0EBFFBD2EC74D80000B0149 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EBFFB92EC74D80000B0149 /* TableViewController.swift */; };
+		C0EBFFBE2EC74D80000B0149 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0EBFFB22EC74D80000B0149 /* Assets.xcassets */; };
+		C0EBFFC02EC74D80000B0149 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0EBFFB52EC74D80000B0149 /* LaunchScreen.storyboard */; };
+		C0EBFFC12EC74D80000B0149 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0EBFFB72EC74D80000B0149 /* Main.storyboard */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		905AFD7F40A9E7F7720FC67D /* Pods-PaywallViewController.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PaywallViewController.release.xcconfig"; path = "Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController.release.xcconfig"; sourceTree = "<group>"; };
+		BE77F150E05FF2FAF5D80AB9 /* Pods-PaywallViewController.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PaywallViewController.debug.xcconfig"; path = "Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController.debug.xcconfig"; sourceTree = "<group>"; };
 		C0EBFF892EC74C2E000B0149 /* PaywallViewController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaywallViewController.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0EBFFB12EC74D80000B0149 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C0EBFFB22EC74D80000B0149 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C0EBFFB32EC74D80000B0149 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C0EBFFB42EC74D80000B0149 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		C0EBFFB62EC74D80000B0149 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		C0EBFFB82EC74D80000B0149 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		C0EBFFB92EC74D80000B0149 /* TableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
+		F38894586A6EAF85BDDD918F /* Pods_PaywallViewController.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PaywallViewController.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		C0EBFF9B2EC74C30000B0149 /* Exceptions for "PaywallViewController" folder in "PaywallViewController" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = C0EBFF882EC74C2E000B0149 /* PaywallViewController */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		C0EBFF8B2EC74C2E000B0149 /* PaywallViewController */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				C0EBFF9B2EC74C30000B0149 /* Exceptions for "PaywallViewController" folder in "PaywallViewController" target */,
-			);
-			path = PaywallViewController;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		C0EBFF862EC74C2E000B0149 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BD6C0A06E8AA586A4F000AAC /* Pods_PaywallViewController.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9CB223CFB401AC34234F8F4C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F38894586A6EAF85BDDD918F /* Pods_PaywallViewController.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A6E9A177456839C9E2232410 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				BE77F150E05FF2FAF5D80AB9 /* Pods-PaywallViewController.debug.xcconfig */,
+				905AFD7F40A9E7F7720FC67D /* Pods-PaywallViewController.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		C0EBFF802EC74C2E000B0149 = {
 			isa = PBXGroup;
 			children = (
-				C0EBFF8B2EC74C2E000B0149 /* PaywallViewController */,
+				C0EBFFBA2EC74D80000B0149 /* PaywallViewController */,
 				C0EBFF8A2EC74C2E000B0149 /* Products */,
+				A6E9A177456839C9E2232410 /* Pods */,
+				9CB223CFB401AC34234F8F4C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,6 +77,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		C0EBFFBA2EC74D80000B0149 /* PaywallViewController */ = {
+			isa = PBXGroup;
+			children = (
+				C0EBFFB12EC74D80000B0149 /* AppDelegate.swift */,
+				C0EBFFB22EC74D80000B0149 /* Assets.xcassets */,
+				C0EBFFB32EC74D80000B0149 /* Info.plist */,
+				C0EBFFB52EC74D80000B0149 /* LaunchScreen.storyboard */,
+				C0EBFFB72EC74D80000B0149 /* Main.storyboard */,
+				C0EBFFB82EC74D80000B0149 /* SceneDelegate.swift */,
+				C0EBFFB92EC74D80000B0149 /* TableViewController.swift */,
+			);
+			path = PaywallViewController;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -65,20 +98,17 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = C0EBFF9C2EC74C30000B0149 /* Build configuration list for PBXNativeTarget "PaywallViewController" */;
 			buildPhases = (
+				5338788FE1120047F69F71B3 /* [CP] Check Pods Manifest.lock */,
 				C0EBFF852EC74C2E000B0149 /* Sources */,
 				C0EBFF862EC74C2E000B0149 /* Frameworks */,
 				C0EBFF872EC74C2E000B0149 /* Resources */,
+				DDEDA059A70CA699C739429D /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				C0EBFF8B2EC74C2E000B0149 /* PaywallViewController */,
-			);
 			name = PaywallViewController;
-			packageProductDependencies = (
-			);
 			productName = PaywallViewController;
 			productReference = C0EBFF892EC74C2E000B0149 /* PaywallViewController.app */;
 			productType = "com.apple.product-type.application";
@@ -122,24 +152,92 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0EBFFBE2EC74D80000B0149 /* Assets.xcassets in Resources */,
+				C0EBFFC02EC74D80000B0149 /* LaunchScreen.storyboard in Resources */,
+				C0EBFFC12EC74D80000B0149 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5338788FE1120047F69F71B3 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-PaywallViewController-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DDEDA059A70CA699C739429D /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		C0EBFF852EC74C2E000B0149 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0EBFFBB2EC74D80000B0149 /* AppDelegate.swift in Sources */,
+				C0EBFFBC2EC74D80000B0149 /* SceneDelegate.swift in Sources */,
+				C0EBFFBD2EC74D80000B0149 /* TableViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		C0EBFFB52EC74D80000B0149 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C0EBFFB42EC74D80000B0149 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		C0EBFFB72EC74D80000B0149 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C0EBFFB62EC74D80000B0149 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		C0EBFF9D2EC74C30000B0149 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BE77F150E05FF2FAF5D80AB9 /* Pods-PaywallViewController.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -153,12 +251,13 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.iftekhar.paywallViewController.PaywallViewController;
+				PRODUCT_BUNDLE_IDENTIFIER = com.infoenum.ruler;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -172,6 +271,7 @@
 		};
 		C0EBFF9E2EC74C30000B0149 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 905AFD7F40A9E7F7720FC67D /* Pods-PaywallViewController.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -185,12 +285,13 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.iftekhar.paywallViewController.PaywallViewController;
+				PRODUCT_BUNDLE_IDENTIFIER = com.infoenum.ruler;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

@@ -1,0 +1,175 @@
+//
+//  IQPaywallConfiguration.swift
+
+public struct IQPaywallConfiguration {
+
+    public var elements: [Element]
+
+    public var productIds: [String] = []
+    public var recommendedProductId: String?
+
+    public var actionButton: ActionButton
+
+    public var tintColor: UIColor
+    public var backgroundColor: UIColor
+    public var linkStyle: LabelStyle
+    public var terms: Link?
+    public var privacyPolicy: Link?
+
+    public init(productIds: [String] = [],
+                recommendedProductId: String? = nil,
+                elements: [Element] = [],
+                actionButton: ActionButton = .init(),
+                tintColor: UIColor = UIColor.tintColor,
+                backgroundColor: UIColor = UIColor.systemBackground,
+                linkStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote), color: UIColor.link)) {
+        self.productIds = productIds
+        self.recommendedProductId = recommendedProductId
+        self.elements = elements
+        self.actionButton = actionButton
+        self.tintColor = tintColor
+        self.backgroundColor = backgroundColor
+        self.linkStyle = linkStyle
+    }
+}
+
+extension IQPaywallConfiguration {
+
+    public struct LabelStyle: Equatable, Hashable {
+        public var font: UIFont
+        public var color: UIColor
+
+        public init(font: UIFont, color: UIColor) {
+            self.font = font
+            self.color = color
+        }
+    }
+
+    public enum Element: Identifiable {
+        public var id: ObjectIdentifier {
+            switch self {
+            case .logo: return ObjectIdentifier(Logo.self)
+            case .title: return ObjectIdentifier(Title.self)
+            case .subtitle: return ObjectIdentifier(Subtitle.self)
+            case .feature: return ObjectIdentifier(Feature.self)
+            case .product: return ObjectIdentifier(Product.self)
+            }
+        }
+
+        case logo(_ logo: Logo)
+        case title(_ title: Title)
+        case subtitle(_ subtitle: Subtitle)
+        case feature(_ feature: Feature)
+        case product(_ product: Product)
+    }
+
+    public struct Link {
+        public var title: String
+        public var url: URL
+
+        public init(_ title: String, url: URL) {
+            self.title = title
+            self.url = url
+        }
+    }
+
+    public struct Logo {
+        public var logo: UIImage
+        public var backgroundColor: UIColor
+
+        public init(_ logo: UIImage, backgroundColor: UIColor = UIColor.clear) {
+            self.logo = logo
+            self.backgroundColor = backgroundColor
+        }
+    }
+
+    public struct Title {
+        public var title: String
+        public var style: LabelStyle
+
+        public init(_ title: String,
+                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .title1),
+                                              color: UIColor.label)) {
+            self.title = title
+            self.style = style
+        }
+    }
+
+    public struct Subtitle {
+        public var title: String
+        public var style: LabelStyle
+
+        public init(_ title: String,
+                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .subheadline),
+                                              color: UIColor.secondaryLabel)) {
+            self.title = title
+            self.style = style
+        }
+    }
+
+    public struct Feature: Hashable {
+
+        public struct Icon: Hashable {
+            public var icon: UIImage
+            public var color: UIColor
+
+            public init(_ icon: UIImage, color: UIColor = UIColor.systemGreen) {
+                self.icon = icon
+                self.color = color
+            }
+        }
+
+        public var titles: [String]
+        public var icon: Icon?
+        public var style: LabelStyle
+
+        public init(titles: [String],
+                    icon: Icon? = nil,
+                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .body),
+                                              color: UIColor.label)) {
+            self.titles = titles
+            self.icon = icon
+            self.style = style
+        }
+    }
+
+    public struct ActionButton {
+        public var titleToSubscribe: String
+        public var titleToUnlock: String
+        public var font: UIFont
+
+        public init(titleToSubscribe: String = "Subscribe", titleToUnlock: String = "Unlock Now", font: UIFont = .preferredFont(forTextStyle: .callout)) {
+            self.titleToSubscribe = titleToSubscribe
+            self.titleToUnlock = titleToUnlock
+            self.font = font
+        }
+    }
+
+    public struct Product {
+
+        public enum Style {
+            case card
+            case list
+        }
+
+        public var style: Style
+        public var nameStyle: LabelStyle
+        public var priceStyle: LabelStyle
+        public var subscriptionPeriodStyle: LabelStyle
+        public var descriptionStyle: LabelStyle
+
+        public init(style: Style = .card,
+                    nameStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .title2), color: .label),
+                    priceStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .title1), color: .label),
+                    subscriptionPeriodStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote), color: .secondaryLabel),
+                    descriptionStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .caption1), color: .secondaryLabel)
+        ) {
+            self.style = style
+            self.nameStyle = nameStyle
+            self.priceStyle = priceStyle
+            self.subscriptionPeriodStyle = subscriptionPeriodStyle
+            self.descriptionStyle = descriptionStyle
+        }
+    }
+}
+
