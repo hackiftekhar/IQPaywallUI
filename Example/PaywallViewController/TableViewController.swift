@@ -13,20 +13,20 @@ class TableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        let isMonthlySubscriptionActive = PurchaseStatusManager.shared.isActive(productID: "com.paywall.ui.monthly")
+        let currentlyActivePlan: ProductStatus? = PurchaseStatusManager.shared.currentlyActivePlan
+        let snapshot: ProductStatus? = PurchaseStatusManager.shared.snapshot(for: "com.paywall.ui.monthly")
+        NotificationCenter.default.addObserver(forName: PurchaseStatusManager.purchaseStatusDidChangedNotification, object: nil, queue: nil) { _ in
+        }
     }
 
     @IBAction func showPaywallAction(_ sender: UIButton) {
         let semibold30 = UIFont(name: "KohinoorBangla-Semibold", size: 30)!
         let semibold20 = UIFont(name: "KohinoorBangla-Semibold", size: 20)!
         let semibold15 = UIFont(name: "KohinoorBangla-Semibold", size: 15)!
-
-//        let regular30 = UIFont(name: "KohinoorBangla-Regular", size: 30)!
-//        let regular20 = UIFont(name: "KohinoorBangla-Regular", size: 20)!
         let regular15 = UIFont(name: "KohinoorBangla-Regular", size: 15)!
-
         let light12 = UIFont(name: "KohinoorBangla-Light", size: 12)!
-//        let light10 = UIFont(name: "KohinoorBangla-Light", size: 10)!
-
         let themeColor = UIColor.systemPink
 
         var configuration = IQPaywallConfiguration()
@@ -65,7 +65,6 @@ class TableViewController: UITableViewController {
 
         let hostingController = UIHostingController(rootView: PaywallView(configuration: configuration))
         hostingController.modalPresentationStyle = .fullScreen
-//        let paywallController = IQPaywallViewController(configuration: configuration)
         self.present(hostingController, animated: true)
     }
 }

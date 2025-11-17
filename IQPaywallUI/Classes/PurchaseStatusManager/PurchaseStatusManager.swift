@@ -21,40 +21,30 @@ public final class PurchaseStatusManager: NSObject {
         snapshotStatus = (try? self.cachedSnapshot()) ?? [:]
     }
 
-    @objc var isSubscribed: Bool {
-        for snapshot in self.snapshotStatus.values {
-            if snapshot.isActive {
-                return true
-            }
+    public var currentlyActivePlan: ProductStatus? {
+        guard let snapshot = self.snapshotStatus.values.first(where: { $0.isActive } ) else {
+            return nil
         }
-        return false
-    }
-
-    var currentlyActivePlan: ProductSnapshot? {
-        return self.snapshotStatus.values.first(where: { $0.isActive } )
+        return ProductStatus(from: snapshot)
     }
 
     /// Snapshot for UI (active, grace, retry, etc.)
-    public func snapshot(for productID: String) -> ProductSnapshot? {
-        snapshotStatus[productID]
-    }
-
-    @objc public func productStatus(for productID: String) -> ProductStatus? {
-        guard let currentlyActivePlan = currentlyActivePlan else {
+    public func snapshot(for productID: String) -> ProductStatus? {
+        guard let snapshot = snapshotStatus[productID] else {
             return nil
         }
-        return ProductStatus(from: currentlyActivePlan)
+        return ProductStatus(from: snapshot)
+
     }
 
-    /// Is user currently entitled to this subscription product
-    public func isActive(to productID: String) -> Bool {
+    public func isActive(productID: String) -> Bool {
          return snapshotStatus[productID]?.isActive == true
     }
 }
 
 extension PurchaseStatusManager {
 
-    public func refreshStatuses(_ products: [Product]) async {
+    func refreshStatuses(_ products: [Product]) async {
         var newSnapshots: [String: ProductSnapshot] = self.snapshotStatus
         let cachedSnapshots: [String: ProductSnapshot] = (try? self.cachedSnapshot()) ?? [:]
         for product in products {
@@ -122,7 +112,7 @@ extension PurchaseStatusManager {
 
         }
         self.snapshotStatus = newSnapshots
-        if newSnapshots == cachedSnapshots {
+        if newSnapshots != cachedSnapshots {
             NotificationCenter.default.post(name: Self.purchaseStatusDidChangedNotification, object: nil)
         }
         try? persistSnapshot(newSnapshots)
@@ -191,7 +181,7 @@ extension PurchaseStatusManager {
     }
 
     /// Intro offer eligibility (best available)
-    public func isEligibleForIntroOffer(for product: Product) async -> Bool {
+    func isEligibleForIntroOffer(for product: Product) async -> Bool {
         if #available(iOS 16.4, *) {
             return await product.subscription?.isEligibleForIntroOffer ?? false
         }

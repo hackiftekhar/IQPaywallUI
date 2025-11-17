@@ -3,7 +3,7 @@
 
 import StoreKit
 
-public struct ProductSnapshot: Codable, Equatable {
+struct ProductSnapshot: Codable, Equatable {
 
     public let productID: String
     public let state: Product.SubscriptionInfo.RenewalState
