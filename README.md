@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/cocoapods/l/IQPaywallUI.svg?style=flat)](https://cocoapods.org/pods/IQPaywallUI)
 [![Platform](https://img.shields.io/cocoapods/p/IQPaywallUI.svg?style=flat)](https://cocoapods.org/pods/IQPaywallUI)
 
+[![Screenshot 1](https://raw.githubusercontent.com/hackiftekhar/IQPaywallUI/master/Screenshot/IQPaywallUIScreenshot.png)]
+
 ## Example
 
 To run the example project, clone the repo, and run `pod install` from the Example directory first.
@@ -109,6 +111,9 @@ To get status of the purchase by the product id, you can always get it's snapsho
 
         // Detailed snapshot of a product id
         let snapshot: ProductStatus? = PurchaseStatusManager.shared.snapshot(for: "com.paywall.ui.monthly")
+        
+        // Check if any plan is currently active
+        let isSubscribed = PurchaseStatusManager.shared.isAnyPlanActive
 ```
 
 ## Author

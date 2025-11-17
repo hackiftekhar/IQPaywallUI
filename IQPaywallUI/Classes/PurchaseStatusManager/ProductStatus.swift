@@ -50,22 +50,12 @@ import StoreKit
         }
         super.init()
     }
-//    init(productID: String,
-//         state: RenewalState,
-//         willAutoRenew: Bool,
-//         nextRenewalDate: Date?,
-//         expirationDate: Date?,
-//         isEligibleForIntroOffer: Bool,
-//         isFamilyShareable: Bool,
-//         ownershipType: OwnershipType) {
-//        self.productID = productID
-//        self.state = state
-//        self.willAutoRenew = willAutoRenew
-//        self.nextRenewalDate = nextRenewalDate
-//        self.expirationDate = expirationDate
-//        self.isEligibleForIntroOffer = isEligibleForIntroOffer
-//        self.isFamilyShareable = isFamilyShareable
-//        self.ownershipType = ownershipType
-//    }
+
+    public var isActive: Bool {
+        switch state {
+        case .subscribed, .inGracePeriod, .inBillingRetryPeriod: return true
+        default: return false
+        }
+    }
 }
 

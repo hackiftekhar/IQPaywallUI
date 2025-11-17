@@ -11,6 +11,7 @@ public final class PurchaseStatusManager: NSObject {
 
     private let receiptFetcher = AppReceiptFetcher()
 
+    @objc
     public static let purchaseStatusDidChangedNotification: Notification.Name = Notification.Name("PurchaseStatusDidChangedNotification")
 
     // Cache status snapshots per productID (main-actor mutation)
@@ -21,7 +22,7 @@ public final class PurchaseStatusManager: NSObject {
         snapshotStatus = (try? self.cachedSnapshot()) ?? [:]
     }
 
-    public var currentlyActivePlan: ProductStatus? {
+    @objc public var currentlyActivePlan: ProductStatus? {
         guard let snapshot = self.snapshotStatus.values.first(where: { $0.isActive } ) else {
             return nil
         }
@@ -29,7 +30,7 @@ public final class PurchaseStatusManager: NSObject {
     }
 
     /// Snapshot for UI (active, grace, retry, etc.)
-    public func snapshot(for productID: String) -> ProductStatus? {
+    @objc public func snapshot(for productID: String) -> ProductStatus? {
         guard let snapshot = snapshotStatus[productID] else {
             return nil
         }
@@ -37,8 +38,17 @@ public final class PurchaseStatusManager: NSObject {
 
     }
 
-    public func isActive(productID: String) -> Bool {
+    @objc public func isActive(productID: String) -> Bool {
          return snapshotStatus[productID]?.isActive == true
+    }
+
+    @objc public var isAnyPlanActive: Bool {
+        for snapshot in self.snapshotStatus.values {
+            if snapshot.isActive {
+                return true
+            }
+        }
+        return false
     }
 }
 
@@ -198,7 +208,7 @@ extension PurchaseStatusManager {
 
 extension PurchaseStatusManager {
     /// Send a transaction and optional renewal info JWS to your server to validate and grant entitlements.
-    public func validate(transaction: Transaction, renewalInfo: Product.SubscriptionInfo.RenewalInfo?, userID: Int?, appAccountToken: UUID?) async throws {
+    func validate(transaction: Transaction, renewalInfo: Product.SubscriptionInfo.RenewalInfo?, userID: Int?, appAccountToken: UUID?) async throws {
 
         let receiptToken = try await receiptFetcher.fetchBase64Receipt()
 

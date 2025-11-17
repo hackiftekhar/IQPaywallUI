@@ -13,12 +13,6 @@ class TableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        let isMonthlySubscriptionActive = PurchaseStatusManager.shared.isActive(productID: "com.paywall.ui.monthly")
-        let currentlyActivePlan: ProductStatus? = PurchaseStatusManager.shared.currentlyActivePlan
-        let snapshot: ProductStatus? = PurchaseStatusManager.shared.snapshot(for: "com.paywall.ui.monthly")
-        NotificationCenter.default.addObserver(forName: PurchaseStatusManager.purchaseStatusDidChangedNotification, object: nil, queue: nil) { _ in
-        }
     }
 
     @IBAction func showPaywallAction(_ sender: UIButton) {

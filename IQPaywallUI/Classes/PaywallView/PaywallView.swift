@@ -72,7 +72,7 @@ public struct PaywallView: View {
                                                                 productStyle: productStyle,
                                                                 tintColor: Color(uiColor: configuration.tintColor),
                                                                 selectedProductId: $viewModel.selectedProductId,
-                                                                isActive: PurchaseStatusManager.shared.isActive(to: product.id))
+                                                                isActive: PurchaseStatusManager.shared.isActive(productID: product.id))
                                             }
                                         }
                                         .padding(.vertical)
@@ -83,7 +83,7 @@ public struct PaywallView: View {
                                                                 productStyle: productStyle,
                                                                 tintColor: Color(uiColor: configuration.tintColor),
                                                                 selectedProductId: $viewModel.selectedProductId,
-                                                                isActive: PurchaseStatusManager.shared.isActive(to: product.id))
+                                                                isActive: PurchaseStatusManager.shared.isActive(productID: product.id))
                                             }
                                         }
                                     }
@@ -97,7 +97,7 @@ public struct PaywallView: View {
                                                         productStyle: .init(),
                                                         tintColor: Color(uiColor: configuration.tintColor),
                                                         selectedProductId: $viewModel.selectedProductId,
-                                                        isActive: PurchaseStatusManager.shared.isActive(to: product.id))
+                                                        isActive: PurchaseStatusManager.shared.isActive(productID: product.id))
                                     }
                                 }
                             }

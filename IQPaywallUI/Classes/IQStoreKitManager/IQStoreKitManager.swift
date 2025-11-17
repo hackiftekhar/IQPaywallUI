@@ -7,6 +7,7 @@ import Security
 import CryptoKit
 
 // StoreKit 2 manager
+@objc
 public final class IQStoreKitManager: NSObject, ObservableObject {
     @objc public static let shared = IQStoreKitManager()
 
@@ -14,18 +15,24 @@ public final class IQStoreKitManager: NSObject, ObservableObject {
     private var productIDs: [String] = []
     private var products: [Product] = []
 
+    @objc
     @MainActor
     @Published public var isProductLoading: Bool = false
+    @objc
     @MainActor
     @Published public var isProductLoadingError: Bool = false
+    @objc
     @MainActor
     @Published public var productLoadingError: Error? = nil
 
 
+    @objc
     @MainActor
     @Published public var isProductPurchasing: Bool = false
+    @objc
     @MainActor
     @Published public var isProductPurchasingError: Bool = false
+    @objc
     @MainActor
     @Published public var productPurchaseError: Error? = nil
 
@@ -46,7 +53,7 @@ public final class IQStoreKitManager: NSObject, ObservableObject {
         self.userID = id
     }
 
-    public func configure(productIDs: [String]) {
+    @objc public func configure(productIDs: [String]) {
         self.productIDs = productIDs
         Task {
             let products = await loadProducts(productIDs: productIDs)
@@ -193,7 +200,7 @@ extension IQStoreKitManager {
     }
     
     /// Present offer code redemption sheet
-    public func presentCodeRedemptionSheet() {
+    @objc public func presentCodeRedemptionSheet() {
         if SKPaymentQueue.canMakePayments() {
             SKPaymentQueue.default().presentCodeRedemptionSheet()
         }
