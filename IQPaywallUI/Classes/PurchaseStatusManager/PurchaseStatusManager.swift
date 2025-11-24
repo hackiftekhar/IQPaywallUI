@@ -123,7 +123,9 @@ extension PurchaseStatusManager {
         }
         self.snapshotStatus = newSnapshots
         if newSnapshots != cachedSnapshots {
-            NotificationCenter.default.post(name: Self.purchaseStatusDidChangedNotification, object: nil)
+            await MainActor.run {
+                NotificationCenter.default.post(name: Self.purchaseStatusDidChangedNotification, object: nil)
+            }
         }
         try? persistSnapshot(newSnapshots)
     }
