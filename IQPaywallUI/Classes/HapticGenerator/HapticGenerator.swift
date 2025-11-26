@@ -3,7 +3,6 @@
 
 import UIKit
 
-/// Simple, centralized haptic feedback manager
 @objc final class HapticGenerator: NSObject {
 
     @objc static let shared = HapticGenerator()

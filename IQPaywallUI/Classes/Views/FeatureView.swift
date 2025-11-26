@@ -4,10 +4,10 @@
 import SwiftUI
 import StoreKit
 
-struct FeatureView: View {
+internal struct FeatureView: View {
 
     // MARK: Inputs
-    let feature: IQPaywallConfiguration.Feature
+    let feature: PaywallConfiguration.Feature
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

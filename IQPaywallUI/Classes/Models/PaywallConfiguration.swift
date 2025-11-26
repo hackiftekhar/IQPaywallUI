@@ -1,7 +1,7 @@
 //
-//  IQPaywallConfiguration.swift
+//  PaywallConfiguration.swift
 
-public struct IQPaywallConfiguration {
+public struct PaywallConfiguration {
 
     public var elements: [Element]
 
@@ -33,7 +33,7 @@ public struct IQPaywallConfiguration {
     }
 }
 
-extension IQPaywallConfiguration {
+extension PaywallConfiguration {
 
     public struct LabelStyle: Equatable, Hashable {
         public var font: UIFont

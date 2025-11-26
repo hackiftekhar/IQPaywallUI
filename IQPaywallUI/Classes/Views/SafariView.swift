@@ -4,7 +4,7 @@
 import SwiftUI
 import SafariServices
 
-struct SafariView: UIViewControllerRepresentable {
+internal struct SafariView: UIViewControllerRepresentable {
     let url: URL
 
     func makeUIViewController(context: Context) -> SFSafariViewController {

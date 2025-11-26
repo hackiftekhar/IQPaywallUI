@@ -1,10 +1,10 @@
 //
-//  StoreKitInAppServerKeychain.swift
+//  PurchaseStatusManagerKeychain.swift
 
 import Foundation
 import Security
 
-final class StoreKitInAppServerKeychain: NSObject {
+internal final class StoreKitInAppServerKeychain: NSObject {
     private static let access: CFString = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
     private static let service: String = Bundle.main.bundleIdentifier ?? "com.paywallUI.paywallUI"
 

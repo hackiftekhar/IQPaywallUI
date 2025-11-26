@@ -1,15 +1,13 @@
 //
-//  IQStoreKitManager.swift
+//  StoreKitManager.swift
 
 import Foundation
 import StoreKit
-import Security
-import CryptoKit
 
 // StoreKit 2 manager
 @objc
-public final class IQStoreKitManager: NSObject, ObservableObject {
-    @objc public static let shared = IQStoreKitManager()
+internal final class StoreKitManager: NSObject, ObservableObject {
+    @objc static let shared = StoreKitManager()
 
     // MARK: - Configuration
     private var productIDs: [String] = []
@@ -17,30 +15,30 @@ public final class IQStoreKitManager: NSObject, ObservableObject {
 
     @objc
     @MainActor
-    @Published public var isProductLoading: Bool = false
+    @Published var isProductLoading: Bool = false
     @objc
     @MainActor
-    @Published public var isProductLoadingError: Bool = false
+    @Published var isProductLoadingError: Bool = false
     @objc
     @MainActor
-    @Published public var productLoadingError: Error? = nil
+    @Published var productLoadingError: Error? = nil
 
 
     @objc
     @MainActor
-    @Published public var isProductPurchasing: Bool = false
+    @Published var isProductPurchasing: Bool = false
     @objc
     @MainActor
-    @Published public var isProductPurchasingError: Bool = false
+    @Published var isProductPurchasingError: Bool = false
     @objc
     @MainActor
-    @Published public var productPurchaseError: Error? = nil
+    @Published var productPurchaseError: Error? = nil
 
     // Observe transactions
     private var updatesTask: Task<Void, Never>?
 
     // Optional user linking
-    private(set) var userID: Int?
+    private(set) var appAccountToken: UUID?
 
     private let inAppServer = PurchaseStatusManager.shared
 
@@ -49,11 +47,11 @@ public final class IQStoreKitManager: NSObject, ObservableObject {
     }
     deinit { updatesTask?.cancel() }
 
-    public func setUser(id: Int?) {
-        self.userID = id
+    public func setAppAccountToken(_ token: UUID?) {
+        self.appAccountToken = token
     }
 
-    @objc public func configure(productIDs: [String]) {
+    @objc func configure(productIDs: [String]) {
         self.productIDs = productIDs
         Task {
             let products = await loadProducts(productIDs: productIDs)
@@ -63,7 +61,7 @@ public final class IQStoreKitManager: NSObject, ObservableObject {
     }
 
     /// Refresh products
-    public func loadProducts(productIDs: [String]) async -> [Product] {
+    func loadProducts(productIDs: [String]) async -> [Product] {
         var productIDs = productIDs
         if productIDs.isEmpty { productIDs = self.productIDs }
 
@@ -76,7 +74,6 @@ public final class IQStoreKitManager: NSObject, ObservableObject {
         do {
             products = try await loadProducts(for: productIDs)
             await inAppServer.refreshStatuses(products)
-            self.products = products
             await MainActor.run {
                 if products.isEmpty {
                     productLoadingError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No products to show"])
@@ -107,10 +104,10 @@ public final class IQStoreKitManager: NSObject, ObservableObject {
     }
 }
 
-extension IQStoreKitManager {
+extension StoreKitManager {
 
     /// Purchase a produc
-    public func purchase(product: Product) async -> PurchaseState {
+    func purchase(product: Product) async -> PurchaseState {
 
         await MainActor.run {
             isProductPurchasing = true
@@ -121,15 +118,10 @@ extension IQStoreKitManager {
         let finalResult: PurchaseState
 
         do {
-            let userId = self.userID
             var options: Set<Product.PurchaseOption> = []
-            var appAccountToken: UUID? = nil
-            if let userId = userId {
-                let token = self.appAccountToken(for: userId)
-                appAccountToken = token
-                options.insert(.appAccountToken(token))
-            } else {
-                appAccountToken = nil
+            let appAccountToken: UUID? = appAccountToken
+            if let appAccountToken = appAccountToken {
+                options.insert(.appAccountToken(appAccountToken))
             }
 
             let result = try await product.purchase(options: options)
@@ -137,7 +129,7 @@ extension IQStoreKitManager {
             case .success(let verification):
                 do {
                     let txn = try Self.verify(verification)
-                    let _ = try await deliverAndValidate(transaction: txn, for: product, userId: userId, appAccountToken: appAccountToken)
+                    let _ = try await deliverAndValidate(transaction: txn, for: product, appAccountToken: appAccountToken)
                     await txn.finish()
                     await inAppServer.refreshStatuses([product])
                     finalResult = .success(transaction: txn)
@@ -187,7 +179,7 @@ extension IQStoreKitManager {
     }
 }
 
-extension IQStoreKitManager {
+extension StoreKitManager {
 
     /// Show Apple’s Manage Subscriptions
     public func showManageSubscriptions(in scene: UIWindowScene) async -> Result<Void, Error> {
@@ -220,7 +212,7 @@ extension IQStoreKitManager {
     }
 }
 
-extension IQStoreKitManager {
+extension StoreKitManager {
 
     /// Get all available subscription offers (intro + promos)
     public func availableSubscriptionOffers(for product: Product) -> [Product.SubscriptionOffer] {
@@ -247,8 +239,8 @@ extension IQStoreKitManager {
                         self.products.first(where: { $0.id == txn.productID })
                     }
                     if let product {
-                        let appAccountToken = (self.userID != nil) ? self.appAccountToken(for: self.userID!) : nil
-                        let _ = try await self.deliverAndValidate(transaction: txn, for: product, userId: self.userID, appAccountToken: appAccountToken)
+                        let appAccountToken = appAccountToken
+                        let _ = try await self.deliverAndValidate(transaction: txn, for: product, appAccountToken: appAccountToken)
                     }
                     await txn.finish()
                     if let product {
@@ -301,12 +293,11 @@ extension IQStoreKitManager {
         return nil
     }
     
-    private func deliverAndValidate(transaction: Transaction, for product: Product, userId: Int?, appAccountToken: UUID?) async throws {
+    private func deliverAndValidate(transaction: Transaction, for product: Product, appAccountToken: UUID?) async throws {
         let renewalInfo = await self.renewalInfo(for: product)
         try await self.inAppServer.validate(
             transaction: transaction,
             renewalInfo: renewalInfo,
-            userID: userId,
             appAccountToken: appAccountToken
         )
     }
@@ -323,33 +314,5 @@ extension IQStoreKitManager {
             }
         } catch {}
         return nil
-    }
-
-    // MARK: - AppAccount token (unchanged)
-    private func appAccountToken(for userID: Int) -> UUID {
-        // 1) बनाइये एक deterministic input string
-        let input = "\(Bundle.main.bundleIdentifier ?? "")-\(userID)"
-
-        // 2) SHA256 digest लें
-        let digest = SHA256.hash(data: Data(input.utf8))   // SHA256Digest
-
-        // 3) digest को बाइट्स के array में बदलें
-        var bytes = Array(digest) // [UInt8], SHA256 => 32 bytes
-
-        // 4) UUID के लिए पहले 16 bytes लें और RFC-4122 के version/variant bits सेट करें
-        //    - version = 4 (pseudo-random / here derived from hash) : set high nibble of byte[6] to 0x4
-        //    - variant = RFC 4122 : set high bits of byte[8] to 0b10xxxxxx
-        bytes[6] = (bytes[6] & 0x0F) | 0x40   // version 4
-        bytes[8] = (bytes[8] & 0x3F) | 0x80   // variant RFC4122
-
-        // 5) UUID tuple बनाइए (uuid_t)
-        let uuidTuple: uuid_t = (
-            bytes[0], bytes[1], bytes[2], bytes[3],
-            bytes[4], bytes[5], bytes[6], bytes[7],
-            bytes[8], bytes[9], bytes[10], bytes[11],
-            bytes[12], bytes[13], bytes[14], bytes[15]
-        )
-
-        return UUID(uuid: uuidTuple)
     }
 }

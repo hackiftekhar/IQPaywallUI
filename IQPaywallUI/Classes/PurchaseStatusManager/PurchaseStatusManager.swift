@@ -52,7 +52,7 @@ public final class PurchaseStatusManager: NSObject {
     }
 }
 
-extension PurchaseStatusManager {
+internal extension PurchaseStatusManager {
 
     func refreshStatuses(_ products: [Product]) async {
         var newSnapshots: [String: ProductSnapshot] = self.snapshotStatus
@@ -89,7 +89,7 @@ extension PurchaseStatusManager {
                 }
             } else {
                 // Non-subscription product — try to find a latest transaction
-                if let txn = await IQStoreKitManager.shared.latestTransaction(for: product.id) {
+                if let txn = await StoreKitManager.shared.latestTransaction(for: product.id) {
                     let snap = ProductSnapshot(
                         productID: product.id,
                         state: .subscribed,
@@ -143,8 +143,8 @@ extension PurchaseStatusManager {
             if li != ri { return li < ri }
             // tie-breaker: later expiration date or transaction purchase date
 
-            let lhsVerify = try? IQStoreKitManager.verify(lhs.transaction)
-            let rhsVerify = try? IQStoreKitManager.verify(rhs.transaction)
+            let lhsVerify = try? StoreKitManager.verify(lhs.transaction)
+            let rhsVerify = try? StoreKitManager.verify(rhs.transaction)
 
             let lDate = lhsVerify?.expirationDate ?? (try? lhs.transaction.payloadValue.expirationDate)
             let rDate = rhsVerify?.expirationDate ?? (try? rhs.transaction.payloadValue.expirationDate)
@@ -167,8 +167,8 @@ extension PurchaseStatusManager {
         }
 
         // Verify objects
-        let txn: Transaction? = (try? IQStoreKitManager.verify(top.transaction))
-        let renewalInfo: Product.SubscriptionInfo.RenewalInfo? = try? IQStoreKitManager.verify(top.renewalInfo)
+        let txn: Transaction? = (try? StoreKitManager.verify(top.transaction))
+        let renewalInfo: Product.SubscriptionInfo.RenewalInfo? = try? StoreKitManager.verify(top.renewalInfo)
 
         // Derive details
         let willAutoRenew = renewalInfo?.willAutoRenew ?? false
@@ -208,9 +208,9 @@ extension PurchaseStatusManager {
     }
 }
 
-extension PurchaseStatusManager {
+internal extension PurchaseStatusManager {
     /// Send a transaction and optional renewal info JWS to your server to validate and grant entitlements.
-    func validate(transaction: Transaction, renewalInfo: Product.SubscriptionInfo.RenewalInfo?, userID: Int?, appAccountToken: UUID?) async throws {
+    func validate(transaction: Transaction, renewalInfo: Product.SubscriptionInfo.RenewalInfo?, appAccountToken: UUID?) async throws {
 
         let receiptToken = try await receiptFetcher.fetchBase64Receipt()
 

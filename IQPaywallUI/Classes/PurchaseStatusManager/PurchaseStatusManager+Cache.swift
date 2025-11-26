@@ -3,7 +3,7 @@
 
 import Foundation
 
-extension PurchaseStatusManager {
+internal extension PurchaseStatusManager {
 
     private static let encoder: JSONEncoder = {
         let encoder = JSONEncoder()

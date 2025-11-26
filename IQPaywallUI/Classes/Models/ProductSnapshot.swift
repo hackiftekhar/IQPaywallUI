@@ -3,17 +3,17 @@
 
 import StoreKit
 
-struct ProductSnapshot: Codable, Equatable {
+internal struct ProductSnapshot: Codable, Equatable {
 
-    public let productID: String
-    public let state: Product.SubscriptionInfo.RenewalState
-    public let willAutoRenew: Bool
-    public let nextRenewalDate: Date?
-    public let expirationDate: Date?
-    public let isEligibleForIntroOffer: Bool
-    public let isFamilyShareable: Bool
-    public let ownershipType: Transaction.OwnershipType?
-//    public let environment: AppStore.Environment
+    let productID: String
+    let state: Product.SubscriptionInfo.RenewalState
+    let willAutoRenew: Bool
+    let nextRenewalDate: Date?
+    let expirationDate: Date?
+    let isEligibleForIntroOffer: Bool
+    let isFamilyShareable: Bool
+    let ownershipType: Transaction.OwnershipType?
+//    let environment: AppStore.Environment
 
     enum CodingKeys: String, CodingKey {
         case productID
@@ -27,7 +27,7 @@ struct ProductSnapshot: Codable, Equatable {
         case environment
     }
 
-    public var isActive: Bool {
+    var isActive: Bool {
         switch state {
         case .subscribed, .inGracePeriod, .inBillingRetryPeriod: return true
         default: return false
@@ -46,7 +46,7 @@ struct ProductSnapshot: Codable, Equatable {
 //        self.environment = environment
     }
 
-    public func encode(to encoder: any Encoder) throws {
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(productID, forKey: .productID)
         try container.encode(state.rawValue, forKey: .state)
@@ -59,7 +59,7 @@ struct ProductSnapshot: Codable, Equatable {
 //        try container.encode(environment.rawValue, forKey: .environment)
     }
 
-    public init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.productID = try container.decode(String.self, forKey: .productID)
         let state: Int = try container.decode(Int.self, forKey: .state)

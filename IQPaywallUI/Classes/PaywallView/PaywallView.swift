@@ -1,5 +1,5 @@
 //
-//  IQPaywallView.swift
+//  PaywallView.swift
 
 import SwiftUI
 import StoreKit
@@ -8,28 +8,59 @@ public struct PaywallView: View {
 
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: PaywallViewModel = .init()
-    @StateObject private var storeKitManager = IQStoreKitManager.shared
+    @StateObject private var storeKitManager = StoreKitManager.shared
 
     @State private var showManageSubscription: Bool = false
     @State private var showTermsAndConditions: Bool = false
     @State private var showPrivacyPolicy: Bool = false
 
-    private let configuration: IQPaywallConfiguration
+    private let configuration: PaywallConfiguration
 
-    public init(configuration: IQPaywallConfiguration) {
+    public init(configuration: PaywallConfiguration) {
         self.configuration = configuration
     }
 
     private var callToActionTitle: String {
-        if let selectedProductId = viewModel.selectedProductId,
-           let product = IQStoreKitManager.shared.product(withID: selectedProductId) {
-            if let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id), snapshot.isActive {
-                return product.subscription != nil ? "Manage Subscription" : "Unlocked"
+
+        if storeKitManager.isProductPurchasing {
+            return "Please wait..."
+        } else if viewModel.products.isEmpty && storeKitManager.isProductLoading {
+            return "Loading..."
+        } else if let selectedProductId = viewModel.selectedProductId,
+           let product = StoreKitManager.shared.product(withID: selectedProductId) {
+
+            if let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id) {
+                if snapshot.isActive {
+                    return product.subscription != nil ? "Manage Subscription" : "Unlocked"
+                } else if let subscription = product.subscription {
+                    if let introOffer = subscription.introductoryOffer,
+                       snapshot.isEligibleForIntroOffer {
+                        return "Start \(introOffer.formatted) Now"
+                    } else {
+                        return configuration.actionButton.titleToSubscribe
+                    }
+                } else {
+                    return configuration.actionButton.titleToUnlock
+                }
             } else {
                 return product.subscription != nil ? configuration.actionButton.titleToSubscribe : configuration.actionButton.titleToUnlock
             }
         } else {
             return "Choose your plan"
+        }
+    }
+
+    private var callToActionBackground: Color {
+
+        if storeKitManager.isProductPurchasing {
+            return .gray
+        } else if viewModel.products.isEmpty && storeKitManager.isProductLoading {
+            return .gray
+        } else if let selectedProductId = viewModel.selectedProductId,
+           StoreKitManager.shared.product(withID: selectedProductId) != nil {
+            return Color(uiColor: configuration.tintColor)
+        } else {
+            return .gray
         }
     }
 
@@ -64,53 +95,25 @@ public struct PaywallView: View {
                                     FeatureView(feature: feature)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 case .product(let productStyle):
-                                    switch productStyle.style {
-                                    case .card:
-                                        HStack(spacing: 20) {
-                                            ForEach(viewModel.products, id: \.self) { product in
-                                                CardProductView(product: product,
-                                                                productStyle: productStyle,
-                                                                tintColor: Color(uiColor: configuration.tintColor),
-                                                                selectedProductId: $viewModel.selectedProductId,
-                                                                isActive: PurchaseStatusManager.shared.isActive(productID: product.id),
-                                                                isOnlyAvailableProduct: configuration.productIds.count <= 1
-                                                )
-                                            }
-                                        }
-                                        .padding(.vertical)
-                                    case .list:
-                                        VStack {
-                                            ForEach(viewModel.products, id: \.self) { product in
-                                                ListProductView(product: product,
-                                                                productStyle: productStyle,
-                                                                tintColor: Color(uiColor: configuration.tintColor),
-                                                                selectedProductId: $viewModel.selectedProductId,
-                                                                isActive: PurchaseStatusManager.shared.isActive(productID: product.id))
-                                            }
-                                        }
-                                    }
+                                    productView(productStyle: productStyle)
                                 }
                             }
 
-                            if !configuration.elements.contains(where: { $0.id == ObjectIdentifier(IQPaywallConfiguration.Product.self) }) {
-                                VStack {
-                                    ForEach(viewModel.products, id: \.self) { product in
-                                        ListProductView(product: product,
-                                                        productStyle: .init(),
-                                                        tintColor: Color(uiColor: configuration.tintColor),
-                                                        selectedProductId: $viewModel.selectedProductId,
-                                                        isActive: PurchaseStatusManager.shared.isActive(productID: product.id))
-                                    }
-                                }
+                            if !configuration.elements.contains(where: { $0.id == ObjectIdentifier(PaywallConfiguration.Product.self) }) {
+                                let productStyle: PaywallConfiguration.Product = .init()
+                                productView(productStyle: productStyle)
                             }
 
                             // Products
-                            if storeKitManager.isProductLoading {
-                                ProgressView("Loading...")
-                            } else if let error = storeKitManager.productLoadingError {
-                                Text(error.localizedDescription)
-                            } else if viewModel.products.isEmpty {
-                                Text("No Products to show")
+                            if viewModel.products.isEmpty {
+                                if storeKitManager.isProductLoading {
+                                    ProgressView("Loading...")
+                                        .foregroundStyle(Color(uiColor: configuration.tintColor))
+                                } else if let error = storeKitManager.productLoadingError {
+                                    Text(error.localizedDescription)
+                                } else if viewModel.products.isEmpty {
+                                    Text("No Products to show")
+                                }
                             }
 
                             Button(action: manageSubscriptionAction) {
@@ -146,28 +149,37 @@ public struct PaywallView: View {
                     }
 
                     VStack {
-                        Button(action: subscribeAction) {
-                            if storeKitManager.isProductPurchasing {
-                                ProgressView("Please wait...")
-                                    .foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color(configuration.tintColor))
-                                    .cornerRadius(20)
-                            } else {
-                                Text(callToActionTitle)
-                                    .foregroundStyle(.white)
-                                    .font(Font(configuration.actionButton.font))
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color(configuration.tintColor))
-                                    .cornerRadius(20)
+
+                        if let selectedProductId = viewModel.selectedProductId,
+                           let product = StoreKitManager.shared.product(withID: selectedProductId),
+                           let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id),
+                           !snapshot.isActive,
+                           let subscription = product.subscription,
+                            let introOffer = subscription.introductoryOffer,
+                               snapshot.isEligibleForIntroOffer {
+                            VStack {
+                                Text(introOffer.formatted)
+                                    .font(Font(configuration.actionButton.font.withSize(15)).weight(.regular))
+                                    .foregroundStyle(Color(configuration.tintColor))
+                                Text("No commitment. Cancel anytime.")
+                                    .font(Font(configuration.actionButton.font.withSize(12)).weight(.light))
+                                    .foregroundStyle(Color(configuration.tintColor))
                             }
+                        }
+
+                        Button(action: subscribeAction) {
+                            Text(callToActionTitle)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(callToActionBackground)
+                            .cornerRadius(20)
+                            .foregroundStyle(.white)
+                            .font(Font(configuration.actionButton.font))
                         }
                     }
                     .padding(.horizontal)
                     .disabled(storeKitManager.isProductLoading)
-                    .alert("Error!", isPresented: $storeKitManager.isProductPurchasing, actions: {
+                    .alert("Error!", isPresented: $storeKitManager.isProductPurchasingError, actions: {
                         Button("OK", action: {})
                     }, message: {
                         Text(storeKitManager.productPurchaseError?.localizedDescription ?? "")
@@ -225,7 +237,7 @@ public struct PaywallView: View {
 
     private func subscribeAction() {
         guard let selectedProductId = viewModel.selectedProductId,
-        let product = IQStoreKitManager.shared.product(withID: selectedProductId) else {
+        let product = StoreKitManager.shared.product(withID: selectedProductId) else {
             HapticGenerator.shared.error()
             return
         }
@@ -235,7 +247,7 @@ public struct PaywallView: View {
             showManageSubscription = true
         } else {
             Task  {
-                let result = await IQStoreKitManager.shared.purchase(product: product)
+                let result = await StoreKitManager.shared.purchase(product: product)
 
                 await MainActor.run {
                     switch result {
@@ -282,10 +294,51 @@ public struct PaywallView: View {
     }
 }
 
+extension PaywallView {
+
+    func productView(productStyle: PaywallConfiguration.Product) -> some View {
+        VStack {
+            switch productStyle.style {
+            case .card:
+                productCardListView(productStyle: productStyle)
+            case .list:
+                productTableListView(productStyle: productStyle)
+            }
+        }
+    }
+
+    func productCardListView(productStyle: PaywallConfiguration.Product) -> some View {
+        HStack(spacing: 20) {
+            ForEach(viewModel.products, id: \.self) { product in
+                CardProductView(product: product,
+                                productStyle: productStyle,
+                                tintColor: Color(uiColor: configuration.tintColor),
+                                selectedProductId: $viewModel.selectedProductId,
+                                isActive: PurchaseStatusManager.shared.isActive(productID: product.id),
+                                isOnlyAvailableProduct: configuration.productIds.count <= 1
+                )
+            }
+        }
+        .padding(.vertical)
+    }
+
+    func productTableListView(productStyle: PaywallConfiguration.Product) -> some View {
+        VStack {
+            ForEach(viewModel.products, id: \.self) { product in
+                ListProductView(product: product,
+                                productStyle: productStyle,
+                                tintColor: Color(uiColor: configuration.tintColor),
+                                selectedProductId: $viewModel.selectedProductId,
+                                isActive: PurchaseStatusManager.shared.isActive(productID: product.id))
+            }
+        }
+    }
+}
+
 #Preview {
 
     var configuration = {
-        var configuration = IQPaywallConfiguration()
+        var configuration = PaywallConfiguration()
         configuration.elements.append(.title(.init("Unlock Pro Features")))
         configuration.elements.append(.subtitle(.init("Get access to all our pro features")))
 //        configuration.elements.append(.appIcon(.init(UIImage(named:"ruler_logo")!)))

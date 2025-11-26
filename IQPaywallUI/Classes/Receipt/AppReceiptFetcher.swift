@@ -1,7 +1,10 @@
+//
+//  AppReceiptFetcher.swift
+
 import Foundation
 import StoreKit
 
-final class AppReceiptFetcher: NSObject, SKRequestDelegate {
+internal final class AppReceiptFetcher: NSObject, SKRequestDelegate {
     enum ReceiptError: Error {
         case missingAfterRefresh
         case refreshFailed(String)

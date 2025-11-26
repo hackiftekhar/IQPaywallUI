@@ -51,6 +51,7 @@ import StoreKit
         super.init()
     }
 
+    @objc
     public var isActive: Bool {
         switch state {
         case .subscribed, .inGracePeriod, .inBillingRetryPeriod: return true
