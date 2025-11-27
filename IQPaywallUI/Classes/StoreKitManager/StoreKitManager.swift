@@ -134,7 +134,7 @@ extension StoreKitManager {
                     await inAppServer.refreshStatuses([product])
                     finalResult = .success(transaction: txn)
                 } catch {
-                    return .failed(error: error)
+                    finalResult = .failure(error: error)
                 }
                 
             case .userCancelled:
@@ -142,10 +142,10 @@ extension StoreKitManager {
             case .pending:
                 finalResult = .pending
             @unknown default:
-                finalResult = .failed(error: NSError(domain: "IAP", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown purchase result"]))
+                finalResult = .failure(error: NSError(domain: "IAP", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown purchase result"]))
             }
         } catch {
-            finalResult = .failed(error: error)
+            finalResult = .failure(error: error)
         }
 
         await MainActor.run {
@@ -158,7 +158,7 @@ extension StoreKitManager {
                 productPurchaseError = NSError(domain: "IAP", code: -1, userInfo: [NSLocalizedDescriptionKey: "Purchase is Pending to be Completed!"])
             case .userCancelled:
                 break
-            case .failed(let error):
+            case .failure(let error):
                 isProductPurchasingError = true
                 productPurchaseError = error
             }
@@ -169,13 +169,33 @@ extension StoreKitManager {
     
     /// Restore purchases
     public func restorePurchases() async -> Result<Void, Error> {
+        await MainActor.run {
+            isProductPurchasing = true
+            isProductPurchasingError = false
+            productPurchaseError = nil
+        }
+
+        let finalResult: Result<Void, Error>
         do {
             try await AppStore.sync()
             await inAppServer.refreshStatuses(self.products)
-            return .success(())
+            finalResult = .success(())
         } catch {
-            return .failure(error)
+            finalResult = .failure(error)
         }
+
+        await MainActor.run {
+            isProductPurchasing = false
+            switch finalResult {
+            case .success:
+                break
+            case .failure(let error):
+                isProductPurchasingError = true
+                productPurchaseError = error
+            }
+        }
+
+        return finalResult
     }
 }
 

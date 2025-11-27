@@ -217,6 +217,7 @@ public struct PaywallView: View {
 
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Restore", action: restorePurchaseAction)
+                        .disabled(storeKitManager.isProductPurchasing)
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -225,9 +226,12 @@ public struct PaywallView: View {
                     } label: {
                         Image(systemName: "xmark").imageScale(.large)
                     }
+                    .disabled(storeKitManager.isProductPurchasing)
                 }
             }
         }
+        .disabled(storeKitManager.isProductPurchasing)
+        .interactiveDismissDisabled(storeKitManager.isProductPurchasing)
         .tint(Color(uiColor: configuration.tintColor))
         .navigationViewStyle(.stack)
     }
@@ -270,7 +274,7 @@ public struct PaywallView: View {
                         HapticGenerator.shared.warning()
                     case .userCancelled:
                         break
-                    case .failed:
+                    case .failure:
                         HapticGenerator.shared.error()
                     }
                 }
