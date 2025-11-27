@@ -27,8 +27,7 @@ public struct PaywallView: View {
         } else if viewModel.products.isEmpty && storeKitManager.isProductLoading {
             return "Loading..."
         } else if let selectedProductId = viewModel.selectedProductId,
-           let product = StoreKitManager.shared.product(withID: selectedProductId) {
-
+                  let product = viewModel.products.first(where: { $0.id == selectedProductId }) {
             if let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id) {
                 if snapshot.isActive {
                     return product.subscription != nil ? "Manage Subscription" : "Unlocked"
@@ -57,7 +56,7 @@ public struct PaywallView: View {
         } else if viewModel.products.isEmpty && storeKitManager.isProductLoading {
             return .gray
         } else if let selectedProductId = viewModel.selectedProductId,
-           StoreKitManager.shared.product(withID: selectedProductId) != nil {
+                  viewModel.products.contains(where: { $0.id == selectedProductId }) {
             return Color(uiColor: configuration.tintColor)
         } else {
             return .gray
@@ -69,121 +68,134 @@ public struct PaywallView: View {
             ZStack {
                 Color(uiColor: configuration.backgroundColor)
                     .ignoresSafeArea()
-                VStack(spacing: 10) {
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 20) {
 
-                            ForEach(configuration.elements) { element in
-                                switch element {
-                                case .logo(let logo):
-                                    Image(uiImage: logo.logo)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 80, height: 80)
-                                        .padding(20)
-                                        .background(Color(uiColor: logo.backgroundColor))
-                                        .cornerRadius(30)
-                                case .title(let title):
-                                    Text(title.title)
-                                        .font(Font(title.style.font))
-                                        .foregroundStyle(Color(uiColor: title.style.color))
-                                case .subtitle(let subtitle):
-                                    Text(subtitle.title)
-                                        .font(Font(subtitle.style.font))
-                                        .foregroundStyle(Color(uiColor: subtitle.style.color))
-                                case .feature(let feature):
-                                    FeatureView(feature: feature)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                case .product(let productStyle):
-                                    productView(productStyle: productStyle)
-                                }
-                            }
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
 
-                            if !configuration.elements.contains(where: { $0.id == ObjectIdentifier(PaywallConfiguration.Product.self) }) {
-                                let productStyle: PaywallConfiguration.Product = .init()
+                        ForEach(configuration.elements) { element in
+                            switch element {
+                            case .logo(let logo):
+                                Image(uiImage: logo.logo)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 80, height: 80)
+                                    .padding(20)
+                                    .background(Color(uiColor: logo.backgroundColor))
+                                    .cornerRadius(30)
+                            case .title(let title):
+                                Text(title.title)
+                                    .font(Font(title.style.font))
+                                    .foregroundStyle(Color(uiColor: title.style.color))
+                            case .subtitle(let subtitle):
+                                Text(subtitle.title)
+                                    .font(Font(subtitle.style.font))
+                                    .foregroundStyle(Color(uiColor: subtitle.style.color))
+                            case .feature(let feature):
+                                FeatureView(feature: feature)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            case .product(let productStyle):
                                 productView(productStyle: productStyle)
                             }
+                        }
 
-                            // Products
-                            if viewModel.products.isEmpty {
-                                if storeKitManager.isProductLoading {
-                                    ProgressView("Loading...")
-                                        .foregroundStyle(Color(uiColor: configuration.tintColor))
-                                } else if let error = storeKitManager.productLoadingError {
-                                    Text(error.localizedDescription)
-                                } else if viewModel.products.isEmpty {
-                                    Text("No Products to show")
+                        if !configuration.elements.contains(where: { $0.id == ObjectIdentifier(PaywallConfiguration.Product.self) }) {
+                            let productStyle: PaywallConfiguration.Product = .init()
+                            productView(productStyle: productStyle)
+                        }
+
+                        // Products
+                        if viewModel.products.isEmpty {
+                            if storeKitManager.isProductLoading {
+                                ProgressView("Loading...")
+                                    .foregroundStyle(Color(uiColor: configuration.tintColor))
+                            } else if let error = storeKitManager.productLoadingError {
+                                Text(error.localizedDescription)
+                            } else if viewModel.products.isEmpty {
+                                Text("No Products to show")
+                            }
+                        }
+
+                        Button(action: manageSubscriptionAction) {
+                            Text("Manage Subscriptions")
+                                .font(Font(configuration.linkStyle.font))
+                                .foregroundStyle(Color(configuration.linkStyle.color))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(5)
+
+                        HStack {
+                            if let terms = configuration.terms {
+                                Button(action: termsAndConditionAction) {
+                                    Text(terms.title)
+                                        .font(Font(configuration.linkStyle.font))
+                                        .foregroundStyle(Color(configuration.linkStyle.color))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(5)
+                            }
+                            if let privacyPolicy = configuration.privacyPolicy {
+                                Button(action: privacyPolicyAction) {
+                                    Text(privacyPolicy.title)
+                                        .font(Font(configuration.linkStyle.font))
+                                        .foregroundStyle(Color(configuration.linkStyle.color))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(5)
+                            }
+                        }
+                    }
+                    .padding()
+                }
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear.frame(height: 100)   // bottom content inset
+                }
+
+                if !viewModel.products.isEmpty {
+                    VStack {
+                        Spacer()
+                        VStack {
+                            if let selectedProductId = viewModel.selectedProductId,
+                               let product = viewModel.products.first(where: { $0.id == selectedProductId }),
+                               let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id),
+                               !snapshot.isActive,
+                               let subscription = product.subscription,
+                               let introOffer = subscription.introductoryOffer,
+                               snapshot.isEligibleForIntroOffer {
+                                VStack {
+                                    Text(introOffer.formatted)
+                                        .font(Font(configuration.actionButton.font.withSize(15)).weight(.regular))
+                                        .foregroundStyle(Color(configuration.tintColor))
+                                    Text("No commitment. Cancel anytime.")
+                                        .font(Font(configuration.actionButton.font.withSize(12)).weight(.light))
+                                        .foregroundStyle(Color(configuration.tintColor))
                                 }
                             }
 
-                            Button(action: manageSubscriptionAction) {
-                                Text("Manage Subscriptions")
-                                    .font(Font(configuration.linkStyle.font))
-                                    .foregroundStyle(Color(configuration.linkStyle.color))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(5)
-
-                            HStack {
-                                if let terms = configuration.terms {
-                                    Button(action: termsAndConditionAction) {
-                                        Text(terms.title)
-                                            .font(Font(configuration.linkStyle.font))
-                                            .foregroundStyle(Color(configuration.linkStyle.color))
-                                    }
+                            Button(action: subscribeAction) {
+                                Text(callToActionTitle)
                                     .frame(maxWidth: .infinity)
-                                    .padding(5)
-                                }
-                                if let privacyPolicy = configuration.privacyPolicy {
-                                    Button(action: privacyPolicyAction) {
-                                        Text(privacyPolicy.title)
-                                            .font(Font(configuration.linkStyle.font))
-                                            .foregroundStyle(Color(configuration.linkStyle.color))
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(5)
-                                }
+                                    .padding()
+    //                                .background(callToActionBackground)
+    //                                .cornerRadius(20)
+                                    .foregroundStyle(.white)
+                                    .font(Font(configuration.actionButton.font))
                             }
+                            .defaultGlassStyle()
+    //                        .background(callToActionBackground)
+    //                        .tint(callToActionBackground)
+    //                        .buttonStyle(.glass)
+    //                        .backwardCompatibleGlassEffect()
+                            .disabled(storeKitManager.isProductLoading)
                         }
                         .padding()
+                        .background(.ultraThinMaterial)
+                        .colorScheme(.light)
+                        .alert("Error!", isPresented: $storeKitManager.isProductPurchasingError, actions: {
+                            Button("OK", action: {})
+                        }, message: {
+                            Text(storeKitManager.productPurchaseError?.localizedDescription ?? "")
+                        })
                     }
-
-                    VStack {
-
-                        if let selectedProductId = viewModel.selectedProductId,
-                           let product = StoreKitManager.shared.product(withID: selectedProductId),
-                           let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id),
-                           !snapshot.isActive,
-                           let subscription = product.subscription,
-                            let introOffer = subscription.introductoryOffer,
-                               snapshot.isEligibleForIntroOffer {
-                            VStack {
-                                Text(introOffer.formatted)
-                                    .font(Font(configuration.actionButton.font.withSize(15)).weight(.regular))
-                                    .foregroundStyle(Color(configuration.tintColor))
-                                Text("No commitment. Cancel anytime.")
-                                    .font(Font(configuration.actionButton.font.withSize(12)).weight(.light))
-                                    .foregroundStyle(Color(configuration.tintColor))
-                            }
-                        }
-
-                        Button(action: subscribeAction) {
-                            Text(callToActionTitle)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(callToActionBackground)
-                            .cornerRadius(20)
-                            .foregroundStyle(.white)
-                            .font(Font(configuration.actionButton.font))
-                        }
-                    }
-                    .padding(.horizontal)
-                    .disabled(storeKitManager.isProductLoading)
-                    .alert("Error!", isPresented: $storeKitManager.isProductPurchasingError, actions: {
-                        Button("OK", action: {})
-                    }, message: {
-                        Text(storeKitManager.productPurchaseError?.localizedDescription ?? "")
-                    })
                 }
             }
             .manageSubscriptionsSheet(isPresented: $showManageSubscription)
@@ -217,6 +229,7 @@ public struct PaywallView: View {
             }
         }
         .tint(Color(uiColor: configuration.tintColor))
+        .navigationViewStyle(.stack)
     }
 
     private func fetchProducts() {
@@ -237,7 +250,7 @@ public struct PaywallView: View {
 
     private func subscribeAction() {
         guard let selectedProductId = viewModel.selectedProductId,
-        let product = StoreKitManager.shared.product(withID: selectedProductId) else {
+              let product = viewModel.products.first(where: { $0.id == selectedProductId }) else {
             HapticGenerator.shared.error()
             return
         }
@@ -247,7 +260,7 @@ public struct PaywallView: View {
             showManageSubscription = true
         } else {
             Task  {
-                let result = await StoreKitManager.shared.purchase(product: product)
+                let result = await storeKitManager.purchase(product: product)
 
                 await MainActor.run {
                     switch result {
@@ -308,7 +321,7 @@ extension PaywallView {
     }
 
     func productCardListView(productStyle: PaywallConfiguration.Product) -> some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 16) {
             ForEach(viewModel.products, id: \.self) { product in
                 CardProductView(product: product,
                                 productStyle: productStyle,

@@ -53,11 +53,21 @@ final class PaywallManager: NSObject {
     // MARK: - Present Paywall
     @objc
     func present(from controller: UIViewController, themeColor: UIColor) {
-        let semibold30 = UIFont(name: "KohinoorBangla-Semibold", size: 30)!
-        let semibold20 = UIFont(name: "KohinoorBangla-Semibold", size: 20)!
-        let semibold15 = UIFont(name: "KohinoorBangla-Semibold", size: 15)!
-        let regular15 = UIFont(name: "KohinoorBangla-Regular", size: 15)!
-        let light12 = UIFont(name: "KohinoorBangla-Light", size: 12)!
+
+        let semibold30 = UIFont(name: "ChalkboardSE-Bold", size: 30)!
+        let semibold20 = UIFont(name: "ChalkboardSE-Bold", size: 20)!
+        let semibold18 = UIFont(name: "ChalkboardSE-Bold", size: 18)!
+        let semibold15 = UIFont(name: "ChalkboardSE-Bold", size: 15)!
+        let regular18 = UIFont(name: "ChalkboardSE-Regular", size: 18)!
+        let regular15 = UIFont(name: "ChalkboardSE-Regular", size: 15)!
+        let light15 = UIFont(name: "ChalkboardSE-Light", size: 15)!
+        let light12 = UIFont(name: "ChalkboardSE-Light", size: 12)!
+
+//        let semibold30 = UIFont(name: "KohinoorBangla-Semibold", size: 30)!
+//        let semibold20 = UIFont(name: "KohinoorBangla-Semibold", size: 20)!
+//        let semibold15 = UIFont(name: "KohinoorBangla-Semibold", size: 15)!
+//        let regular15 = UIFont(name: "KohinoorBangla-Regular", size: 15)!
+//        let light12 = UIFont(name: "KohinoorBangla-Light", size: 12)!
         let themeColor = UIColor.systemPink
 
         var configuration = PaywallConfiguration()
@@ -71,7 +81,7 @@ final class PaywallManager: NSObject {
                                                      icon: .init(UIImage(systemName: "checkmark.circle.fill")!, color: themeColor),
                                                      style: .init(font: regular15, color: themeColor))))
 
-        configuration.elements.append(.product(.init(style: .list,
+        configuration.elements.append(.product(.init(style: .card,
                                                      nameStyle: .init(font: semibold20, color: themeColor),
                                                      priceStyle: .init(font: semibold20, color: themeColor),
                                                      subscriptionPeriodStyle: .init(font: light12, color: themeColor),
@@ -91,12 +101,13 @@ final class PaywallManager: NSObject {
         configuration.terms = .init("Terms & Conditions", url: URL(string: "https://www.termsAndConditions.com")!)
         configuration.privacyPolicy = .init("Privacy Policy", url: URL(string: "https://www.privacyPolicy.com")!)
 
+//        configuration.backgroundColor = UIColor.systemYellow
         configuration.backgroundColor = UIColor.white
         configuration.tintColor = themeColor
         configuration.linkStyle = .init(font: regular15, color: themeColor)
 
         let hostingController = UIHostingController(rootView: PaywallView(configuration: configuration))
-        hostingController.modalPresentationStyle = .fullScreen
+//        hostingController.modalPresentationStyle = .fullScreen
         controller.present(hostingController, animated: true)
     }
 }
