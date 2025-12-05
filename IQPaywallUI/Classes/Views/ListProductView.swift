@@ -3,6 +3,7 @@
 
 import SwiftUI
 import StoreKit
+import IQStoreKitManager
 
 internal struct ListProductView: View {
 
@@ -12,6 +13,22 @@ internal struct ListProductView: View {
     let configuration: PaywallConfiguration
     @Binding var selectedProductId: String?
     let isActive: Bool
+
+    var titleForegroundColor: Color {
+        product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.nameStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
+    }
+
+    var priceForegroundColor: Color {
+        product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.priceStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
+    }
+
+    var subscriptionPeriodColor: Color {
+        product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.subscriptionPeriodStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
+    }
+
+    var descriptionColor: Color {
+        product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.descriptionStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
+    }
 
     var body: some View {
         Button {
@@ -27,11 +44,11 @@ internal struct ListProductView: View {
                     HStack {
                         Text(product.displayName)
                             .font(productStyle.nameStyle.font.swiftUIFont)
-                            .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.nameStyle.color.swiftUIColor)
+                            .foregroundColor(titleForegroundColor)
                         if isActive {
                             Text("(Current)")
                                 .font(productStyle.descriptionStyle.font.swiftUIFont)
-                                .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.descriptionStyle.color.swiftUIColor)
+                                .foregroundColor(descriptionColor)
                         }
                         Spacer()
                     }
@@ -39,7 +56,7 @@ internal struct ListProductView: View {
                      Text(product.description)
                         .multilineTextAlignment(.leading)
                         .font(productStyle.descriptionStyle.font.swiftUIFont)
-                        .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.descriptionStyle.color.swiftUIColor)
+                        .foregroundColor(descriptionColor)
                         .truncationMode(.tail)
 
                     if let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id),
@@ -50,7 +67,7 @@ internal struct ListProductView: View {
                         VStack(alignment: .leading) {
                             Text(introOffer.formatted)
                                 .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
-                                .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.subscriptionPeriodStyle.color.swiftUIColor)
+                                .foregroundColor(subscriptionPeriodColor)
     //                        Text("No commitment. Cancel anytime.")
     //                            .font(Font(productStyle.subscriptionPeriodStyle.font))
     //                            .foregroundStyle(Color(productStyle.subscriptionPeriodStyle.color))
@@ -63,7 +80,7 @@ internal struct ListProductView: View {
                 VStack(alignment: .trailing) {
                     Text(product.displayPrice)
                         .font(productStyle.priceStyle.font.swiftUIFont)
-                        .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.priceStyle.color.swiftUIColor)
+                        .foregroundColor(priceForegroundColor)
                     Group {
                         switch product.type {
                         case .consumable:
@@ -87,7 +104,7 @@ internal struct ListProductView: View {
                         }
                     }
                     .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
-                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.subscriptionPeriodStyle.color.swiftUIColor)
+                    .foregroundColor(subscriptionPeriodColor)
                 }
             }
         }

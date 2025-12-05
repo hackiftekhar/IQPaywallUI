@@ -1,14 +1,14 @@
 {
-    "name": "IQPaywallUI",
+    "name": "IQStoreKitManager",
     "version": "0.0.1",
     "source": {
-        "git": "https://github.com/hackiftekhar/IQPaywallUI.git",
+        "git": "https://github.com/hackiftekhar/IQStoreKitManager.git",
         "tag": "0.0.1"
     },
-    "summary": "Paywall Screen",
-    "description": "This contains Paywall screen which you can use directly to integrate in app purchase basic features.",
-    "homepage": "https://github.com/hackiftekhar/IQPaywallUI",
-    "screenshots": "https://raw.githubusercontent.com/hackiftekhar/PaywallUI/master/Screenshot/IQPaywallUIScreenshot.png",
+    "summary": "StoreKit Manager",
+    "description": "This contains StoreKit relatted functions.",
+    "homepage": "https://github.com/hackiftekhar/IQStoreKitManager",
+    "screenshots": "https://raw.githubusercontent.com/hackiftekhar/IQStoreKitManager/master/Screenshot/IQStoreKitManagerScreenshot.png",
     "license": {
         "type": "MIT",
         "file": "LICENSE"
@@ -25,16 +25,12 @@
         "5.9"
     ],
     "source_files": [
-        "IQPaywallUI/Classes/**/*.{swift}"
+        "IQStoreKitManager/Classes/**/*.{swift}"
     ],
-    "dependencies": {
-        "IQStoreKitManager": []
-    },
     "resource_bundles": {
-        "IQPaywallUI": "IQPaywallUI/Assets/**/*"
+        "IQStoreKitManager": "IQStoreKitManager/Assets/**/*"
     },
     "frameworks": [
-        "SwiftUI",
         "UIKit",
         "StoreKit",
         "Security",

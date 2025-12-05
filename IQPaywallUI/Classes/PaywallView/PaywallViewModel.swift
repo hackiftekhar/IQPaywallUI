@@ -3,6 +3,7 @@
 
 import SwiftUI
 import StoreKit
+import IQStoreKitManager
 
 @MainActor
 internal final class PaywallViewModel: ObservableObject {

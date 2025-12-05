@@ -3,9 +3,9 @@
 
 import UIKit
 
-@objc final class HapticGenerator: NSObject {
+internal final class HapticGenerator: NSObject {
 
-    @objc static let shared = HapticGenerator()
+    static let shared = HapticGenerator()
 
     private override init() {
         super.init()
@@ -21,8 +21,6 @@ import UIKit
     private let notificationGenerator = UINotificationFeedbackGenerator()
     private let selectionGenerator    = UISelectionFeedbackGenerator()
 
-    // MARK: - Public Methods
-
     /// Prepare haptics early (e.g. viewDidAppear) for smoother feel
     private func prepare() {
         impactLight.prepare()
@@ -35,27 +33,27 @@ import UIKit
     }
 
     /// Subtle tap feedback
-    @objc func lightImpact() {
+    func lightImpact() {
         impactLight.impactOccurred()
     }
 
     /// Medium feedback (default UI tap feel)
-    @objc func mediumImpact() {
+    func mediumImpact() {
         impactMedium.impactOccurred()
     }
 
     /// Strong feedback (confirm actions)
-    @objc func heavyImpact() {
+    func heavyImpact() {
         impactHeavy.impactOccurred()
     }
 
     /// Softer version of light feedback
-    @objc func softImpact() {
+    func softImpact() {
         impactSoft.impactOccurred()
     }
 
     /// Harder version of heavy feedback
-    @objc func rigidmpact() {
+    func rigidmpact() {
         impactRigid.impactOccurred()
     }
 }
@@ -63,17 +61,17 @@ import UIKit
 extension HapticGenerator {
 
     /// Success-type notification haptic
-    @objc func success() {
+    func success() {
         notificationGenerator.notificationOccurred(.success)
     }
 
     /// Warning-type notification haptic
-    @objc func warning() {
+    func warning() {
         notificationGenerator.notificationOccurred(.warning)
     }
 
     /// Error-type notification haptic
-    @objc func error() {
+    func error() {
         notificationGenerator.notificationOccurred(.error)
     }
 }

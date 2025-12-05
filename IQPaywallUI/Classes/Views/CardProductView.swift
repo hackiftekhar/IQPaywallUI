@@ -14,6 +14,22 @@ internal struct CardProductView: View {
     let isActive: Bool
     let isOnlyAvailableProduct: Bool
 
+    var titleForegroundColor: Color {
+        product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.nameStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
+    }
+
+    var priceForegroundColor: Color {
+        product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.priceStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
+    }
+
+    var subscriptionPeriodColor: Color {
+        product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.subscriptionPeriodStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
+    }
+
+    var descriptionColor: Color {
+        product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.descriptionStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
+    }
+
     var body: some View {
         Button {
             onSelectAction()
@@ -22,11 +38,11 @@ internal struct CardProductView: View {
 
                 Text(product.displayName)
                     .font(productStyle.nameStyle.font.swiftUIFont)
-                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.nameStyle.color.swiftUIColor)
+                    .foregroundColor(titleForegroundColor)
 
                 Text(product.displayPrice)
                     .font(productStyle.priceStyle.font.swiftUIFont)
-                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.priceStyle.color.swiftUIColor)
+                    .foregroundColor(priceForegroundColor)
 
                 Group {
                     switch product.type {
@@ -51,7 +67,7 @@ internal struct CardProductView: View {
                     }
                 }
                 .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
-                .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.subscriptionPeriodStyle.color.swiftUIColor)
+                .foregroundColor(subscriptionPeriodColor)
 
     //            if let period = product.subscription?.subscriptionPeriod {
     //                Text(billingText(for: period))
@@ -63,7 +79,7 @@ internal struct CardProductView: View {
                     .lineLimit(5)
                     .multilineTextAlignment(.leading)
                     .font(productStyle.descriptionStyle.font.swiftUIFont)
-                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.descriptionStyle.color.swiftUIColor)
+                    .foregroundColor(descriptionColor)
                     .truncationMode(.tail)
             }
             .padding()
@@ -91,7 +107,7 @@ internal struct CardProductView: View {
                             .stroke(configuration.foregroundColor.swiftUIColor, lineWidth: 1)
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.nameStyle.color.swiftUIColor)
+                                    .fill(titleForegroundColor)
                             )
                     )
                     .offset(y: -8)

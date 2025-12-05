@@ -21,14 +21,14 @@ public struct PaywallConfiguration {
                 elements: [Element] = [],
                 actionButton: ActionButton = .init(),
                 backgroundColor: UIColor = UIColor.systemBackground,
-                foregroundColor: UIColor = UIColor.label,
-                linkStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote), color: UIColor.link)) {
+                foregroundColor: UIColor = UIColor.systemBlue,
+                linkStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote))) {
         self.productIds = productIds
         self.recommendedProductId = recommendedProductId
         self.elements = elements
         self.actionButton = actionButton
         self.backgroundColor = backgroundColor
-        self.foregroundColor = backgroundColor
+        self.foregroundColor = foregroundColor
         self.linkStyle = linkStyle
     }
 }
@@ -37,9 +37,9 @@ extension PaywallConfiguration {
 
     public struct LabelStyle: Equatable, Hashable {
         public var font: UIFont
-        public var color: UIColor
+        public var color: UIColor?
 
-        public init(font: UIFont, color: UIColor) {
+        public init(font: UIFont, color: UIColor? = nil) {
             self.font = font
             self.color = color
         }
@@ -88,8 +88,7 @@ extension PaywallConfiguration {
         public var style: LabelStyle
 
         public init(_ title: String,
-                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .title1),
-                                              color: UIColor.label)) {
+                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .largeTitle))) {
             self.title = title
             self.style = style
         }
@@ -100,8 +99,7 @@ extension PaywallConfiguration {
         public var style: LabelStyle
 
         public init(_ title: String,
-                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .subheadline),
-                                              color: UIColor.secondaryLabel)) {
+                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .headline))) {
             self.title = title
             self.style = style
         }
@@ -111,9 +109,9 @@ extension PaywallConfiguration {
 
         public struct Icon: Hashable {
             public var icon: UIImage
-            public var color: UIColor
+            public var color: UIColor?
 
-            public init(_ icon: UIImage, color: UIColor = UIColor.systemGreen) {
+            public init(_ icon: UIImage, color: UIColor? = nil) {
                 self.icon = icon
                 self.color = color
             }
@@ -125,8 +123,7 @@ extension PaywallConfiguration {
 
         public init(titles: [String],
                     icon: Icon? = nil,
-                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .body),
-                                              color: UIColor.label)) {
+                    style: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .callout))) {
             self.titles = titles
             self.icon = icon
             self.style = style
@@ -138,7 +135,9 @@ extension PaywallConfiguration {
         public var titleToUnlock: String
         public var font: UIFont
 
-        public init(titleToSubscribe: String = "Subscribe", titleToUnlock: String = "Unlock Now", font: UIFont = .preferredFont(forTextStyle: .callout)) {
+        public init(titleToSubscribe: String = "Subscribe",
+                    titleToUnlock: String = "Unlock Now",
+                    font: UIFont = .preferredFont(forTextStyle: .body)) {
             self.titleToSubscribe = titleToSubscribe
             self.titleToUnlock = titleToUnlock
             self.font = font
@@ -159,10 +158,10 @@ extension PaywallConfiguration {
         public var descriptionStyle: LabelStyle
 
         public init(style: Style = .card,
-                    nameStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .title2), color: .label),
-                    priceStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .title1), color: .label),
-                    subscriptionPeriodStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote), color: .secondaryLabel),
-                    descriptionStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .caption1), color: .secondaryLabel)
+                    nameStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .title2)),
+                    priceStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .title1)),
+                    subscriptionPeriodStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote)),
+                    descriptionStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .caption1))
         ) {
             self.style = style
             self.nameStyle = nameStyle

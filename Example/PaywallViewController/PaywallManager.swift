@@ -9,6 +9,7 @@
 import UIKit
 import SwiftUI
 import IQPaywallUI
+import IQStoreKitManager
 
 @objc
 final class PaywallManager: NSObject {
@@ -25,22 +26,22 @@ final class PaywallManager: NSObject {
     private override init() {
         super.init()
     }
-    
+
     // MARK: - App purchase activation check
     @objc
     var isSubscribed: Bool {
-        #if targetEnvironment(simulator)
+#if targetEnvironment(simulator)
         return true
-        #else
+#else
         return PurchaseStatusManager.shared.isAnyPlanActive
-        #endif
+#endif
     }
-    
+
     @objc
     var currentlyActivePlan: ProductStatus? {
         return PurchaseStatusManager.shared.currentlyActivePlan
     }
-    
+
     @objc
     func configure() {
         IQPaywallUI.configure(productIds: [
@@ -59,10 +60,11 @@ final class PaywallManager: NSObject {
     func present(from controller: UIViewController, themeColor: UIColor) {
 
         let hostingController = UIHostingController(rootView: paywallView())
-//        hostingController.modalPresentationStyle = .fullScreen
+        //        hostingController.modalPresentationStyle = .fullScreen
         controller.present(hostingController, animated: true)
     }
 
+    // Customized configuration
     var configuration: PaywallConfiguration {
         let semibold30 = UIFont(name: "ChalkboardSE-Bold", size: 30)!
         let semibold20 = UIFont(name: "ChalkboardSE-Bold", size: 20)!
@@ -73,8 +75,8 @@ final class PaywallManager: NSObject {
         let light15 = UIFont(name: "ChalkboardSE-Light", size: 15)!
         let light12 = UIFont(name: "ChalkboardSE-Light", size: 12)!
 
-        let foregroundColor = UIColor.systemYellow
-        let backgroundColor = UIColor.systemBlue
+        let foregroundColor = UIColor.systemPink
+        let backgroundColor = UIColor.white
 
         var configuration = PaywallConfiguration()
         configuration.elements.append(.logo(.init(UIImage(named:"ruler_logo")!, backgroundColor: foregroundColor)))
@@ -112,4 +114,31 @@ final class PaywallManager: NSObject {
         configuration.linkStyle = .init(font: regular15, color: foregroundColor)
         return configuration
     }
+
+    // Minimal configuration
+//    var configuration: PaywallConfiguration {
+//        var configuration = PaywallConfiguration()
+//        configuration.elements.append(.logo(.init(UIImage(named:"ruler_logo")!)))
+//        configuration.elements.append(.title(.init("Unlock Pro Features")))
+//        configuration.elements.append(.subtitle(.init("Get access to all our pro features")))
+//        configuration.elements.append(.feature(.init(titles: ["Remove all ads",
+//                                                              "Customize Color Themes",
+//                                                              "Unlock Pixel Ratio feature",
+//                                                              "Persist Your Settings"],
+//                                                     icon: .init(UIImage(systemName: "checkmark.circle.fill")!))))
+//
+//        configuration.elements.append(.product(.init(style: .list))
+//        )
+//
+//        configuration.productIds = [
+//            Self.monthlyProductID,
+//            Self.yearlyProductID,
+//            Self.lifetimeProductID,
+//        ]
+//        configuration.recommendedProductId = Self.yearlyProductID
+//        configuration.terms = .init("Terms & Conditions", url: URL(string: "https://www.termsAndConditions.com")!)
+//        configuration.privacyPolicy = .init("Privacy Policy", url: URL(string: "https://www.privacyPolicy.com")!)
+//
+//        return configuration
+//    }
 }

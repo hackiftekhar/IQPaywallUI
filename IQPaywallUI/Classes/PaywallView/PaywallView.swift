@@ -3,6 +3,7 @@
 
 import SwiftUI
 import StoreKit
+import IQStoreKitManager
 
 public struct PaywallView: View {
 
@@ -85,13 +86,13 @@ public struct PaywallView: View {
                             case .title(let title):
                                 Text(title.title)
                                     .font(title.style.font.swiftUIFont)
-                                    .foregroundStyle(title.style.color.swiftUIColor)
+                                    .foregroundStyle(title.style.color?.swiftUIColor ?? Color.primary)
                             case .subtitle(let subtitle):
                                 Text(subtitle.title)
                                     .font(subtitle.style.font.swiftUIFont)
-                                    .foregroundStyle(subtitle.style.color.swiftUIColor)
+                                    .foregroundStyle(subtitle.style.color?.swiftUIColor ?? Color.secondary)
                             case .feature(let feature):
-                                FeatureView(feature: feature)
+                                FeatureView(feature: feature, configuration: configuration)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             case .product(let productStyle):
                                 productView(productStyle: productStyle)
@@ -117,7 +118,7 @@ public struct PaywallView: View {
                         Button(action: manageSubscriptionAction) {
                             Text("Manage Subscriptions")
                                 .font(configuration.linkStyle.font.swiftUIFont)
-                                .foregroundStyle(configuration.linkStyle.color.swiftUIColor)
+                                .foregroundStyle(configuration.linkStyle.color?.swiftUIColor ?? Color.blue)
                         }
                         .disabled(storeKitManager.isProductPurchasing)
                         .frame(maxWidth: .infinity)
@@ -128,7 +129,7 @@ public struct PaywallView: View {
                                 Button(action: termsAndConditionAction) {
                                     Text(terms.title)
                                         .font(configuration.linkStyle.font.swiftUIFont)
-                                        .foregroundStyle(configuration.linkStyle.color.swiftUIColor)
+                                        .foregroundStyle(configuration.linkStyle.color?.swiftUIColor ?? Color.blue)
                                 }
                                 .disabled(storeKitManager.isProductPurchasing)
                                 .frame(maxWidth: .infinity)
@@ -138,7 +139,7 @@ public struct PaywallView: View {
                                 Button(action: privacyPolicyAction) {
                                     Text(privacyPolicy.title)
                                         .font(configuration.linkStyle.font.swiftUIFont)
-                                        .foregroundStyle(configuration.linkStyle.color.swiftUIColor)
+                                        .foregroundStyle(configuration.linkStyle.color?.swiftUIColor ?? Color.blue)
                                 }
                                 .disabled(storeKitManager.isProductPurchasing)
                                 .frame(maxWidth: .infinity)

@@ -8,6 +8,7 @@ internal struct FeatureView: View {
 
     // MARK: Inputs
     let feature: PaywallConfiguration.Feature
+    let configuration: PaywallConfiguration
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -15,12 +16,12 @@ internal struct FeatureView: View {
                 HStack(spacing: 20) {
                     if let icon = feature.icon {
                         Image(uiImage: icon.icon.withRenderingMode(.alwaysTemplate))
-                            .foregroundStyle(icon.color.swiftUIColor)
+                            .foregroundStyle(icon.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
                             .imageScale(.large)
                     }
                     Text(title)
                         .font(feature.style.font.swiftUIFont)
-                        .foregroundStyle(feature.style.color.swiftUIColor)
+                        .foregroundStyle(feature.style.color?.swiftUIColor ?? Color.primary)
                 }
             }
         }

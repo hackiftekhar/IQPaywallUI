@@ -3,7 +3,7 @@
 
 import StoreKit
 
-internal enum PurchaseState {
+public enum PurchaseState {
     case success(transaction: Transaction)
     case restored
     case pending

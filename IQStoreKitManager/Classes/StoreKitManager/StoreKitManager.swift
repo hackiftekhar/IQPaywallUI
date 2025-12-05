@@ -6,33 +6,31 @@ import StoreKit
 
 // StoreKit 2 manager
 @objc
-internal final class StoreKitManager: NSObject, ObservableObject {
-    @objc static let shared = StoreKitManager()
+public final class StoreKitManager: NSObject, ObservableObject {
+    @objc static public let shared = StoreKitManager()
 
     // MARK: - Configuration
     private var productIDs: [String] = []
     private var products: [Product] = []
 
-    @objc
     @MainActor
-    @Published var isProductLoading: Bool = false
-    @objc
+    @Published @objc public var isProductLoading: Bool = false
+
     @MainActor
-    @Published var isProductLoadingError: Bool = false
-    @objc
+    @Published @objc public var isProductLoadingError: Bool = false
+
     @MainActor
-    @Published var productLoadingError: Error? = nil
+    @Published @objc public var productLoadingError: Error? = nil
 
 
-    @objc
     @MainActor
-    @Published var isProductPurchasing: Bool = false
-    @objc
+    @Published @objc public var isProductPurchasing: Bool = false
+
     @MainActor
-    @Published var isProductPurchasingError: Bool = false
-    @objc
+    @Published @objc public var isProductPurchasingError: Bool = false
+
     @MainActor
-    @Published var productPurchaseError: Error? = nil
+    @Published @objc public var productPurchaseError: Error? = nil
 
     // Observe transactions
     private var updatesTask: Task<Void, Never>?
@@ -47,11 +45,11 @@ internal final class StoreKitManager: NSObject, ObservableObject {
     }
     deinit { updatesTask?.cancel() }
 
-    public func setAppAccountToken(_ token: UUID?) {
+    @objc public func setAppAccountToken(_ token: UUID?) {
         self.appAccountToken = token
     }
 
-    @objc func configure(productIDs: [String]) {
+    @objc public func configure(productIDs: [String]) {
         self.productIDs = productIDs
         Task {
             let products = await loadProducts(productIDs: productIDs)
@@ -61,7 +59,7 @@ internal final class StoreKitManager: NSObject, ObservableObject {
     }
 
     /// Refresh products
-    func loadProducts(productIDs: [String]) async -> [Product] {
+    public func loadProducts(productIDs: [String]) async -> [Product] {
         var productIDs = productIDs
         if productIDs.isEmpty { productIDs = self.productIDs }
 
@@ -106,8 +104,8 @@ internal final class StoreKitManager: NSObject, ObservableObject {
 
 extension StoreKitManager {
 
-    /// Purchase a produc
-    func purchase(product: Product) async -> PurchaseState {
+    /// Purchase a product
+    public func purchase(product: Product) async -> PurchaseState {
 
         await MainActor.run {
             isProductPurchasing = true
