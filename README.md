@@ -86,7 +86,7 @@ When you'll need to present the PaywallUI, create a configuration object and pre
         configuration.privacyPolicy = .init("Privacy Policy", url: URL(string: "https://www.privacy.com")!)
 
         configuration.backgroundColor = UIColor.white
-        configuration.tintColor = themeColor
+        configuration.foregroundColor = themeColor
         configuration.linkStyle = .init(font: regular15, color: themeColor)
         
         let hostingController = UIHostingController(rootView: PaywallView(configuration: configuration))

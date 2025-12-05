@@ -5,13 +5,13 @@ public struct PaywallConfiguration {
 
     public var elements: [Element]
 
-    public var productIds: [String] = []
+    public var productIds: [String]
     public var recommendedProductId: String?
 
     public var actionButton: ActionButton
 
-    public var tintColor: UIColor
     public var backgroundColor: UIColor
+    public var foregroundColor: UIColor
     public var linkStyle: LabelStyle
     public var terms: Link?
     public var privacyPolicy: Link?
@@ -20,15 +20,15 @@ public struct PaywallConfiguration {
                 recommendedProductId: String? = nil,
                 elements: [Element] = [],
                 actionButton: ActionButton = .init(),
-                tintColor: UIColor = UIColor.tintColor,
                 backgroundColor: UIColor = UIColor.systemBackground,
+                foregroundColor: UIColor = UIColor.label,
                 linkStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote), color: UIColor.link)) {
         self.productIds = productIds
         self.recommendedProductId = recommendedProductId
         self.elements = elements
         self.actionButton = actionButton
-        self.tintColor = tintColor
         self.backgroundColor = backgroundColor
+        self.foregroundColor = backgroundColor
         self.linkStyle = linkStyle
     }
 }
@@ -173,3 +173,15 @@ extension PaywallConfiguration {
     }
 }
 
+import SwiftUI
+extension UIColor {
+    var swiftUIColor: Color {
+        Color(uiColor: self)
+    }
+}
+
+extension UIFont {
+    var swiftUIFont: Font {
+        Font(self)
+    }
+}

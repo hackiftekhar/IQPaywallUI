@@ -15,12 +15,12 @@ internal struct FeatureView: View {
                 HStack(spacing: 20) {
                     if let icon = feature.icon {
                         Image(uiImage: icon.icon.withRenderingMode(.alwaysTemplate))
-                            .foregroundStyle(Color(uiColor: icon.color))
+                            .foregroundStyle(icon.color.swiftUIColor)
                             .imageScale(.large)
                     }
                     Text(title)
-                        .font(Font(feature.style.font))
-                        .foregroundStyle(Color(uiColor: feature.style.color))
+                        .font(feature.style.font.swiftUIFont)
+                        .foregroundStyle(feature.style.color.swiftUIColor)
                 }
             }
         }

@@ -57,7 +57,7 @@ public struct PaywallView: View {
             return .gray
         } else if let selectedProductId = viewModel.selectedProductId,
                   viewModel.products.contains(where: { $0.id == selectedProductId }) {
-            return Color(uiColor: configuration.tintColor)
+            return configuration.foregroundColor.swiftUIColor
         } else {
             return .gray
         }
@@ -66,7 +66,7 @@ public struct PaywallView: View {
     public var body: some View {
         NavigationView {
             ZStack {
-                Color(uiColor: configuration.backgroundColor)
+                configuration.backgroundColor.swiftUIColor
                     .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
@@ -80,16 +80,16 @@ public struct PaywallView: View {
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 80, height: 80)
                                     .padding(20)
-                                    .background(Color(uiColor: logo.backgroundColor))
+                                    .background(logo.backgroundColor.swiftUIColor)
                                     .cornerRadius(30)
                             case .title(let title):
                                 Text(title.title)
-                                    .font(Font(title.style.font))
-                                    .foregroundStyle(Color(uiColor: title.style.color))
+                                    .font(title.style.font.swiftUIFont)
+                                    .foregroundStyle(title.style.color.swiftUIColor)
                             case .subtitle(let subtitle):
                                 Text(subtitle.title)
-                                    .font(Font(subtitle.style.font))
-                                    .foregroundStyle(Color(uiColor: subtitle.style.color))
+                                    .font(subtitle.style.font.swiftUIFont)
+                                    .foregroundStyle(subtitle.style.color.swiftUIColor)
                             case .feature(let feature):
                                 FeatureView(feature: feature)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -107,7 +107,6 @@ public struct PaywallView: View {
                         if viewModel.products.isEmpty {
                             if storeKitManager.isProductLoading {
                                 ProgressView("Loading...")
-                                    .foregroundStyle(Color(uiColor: configuration.tintColor))
                             } else if let error = storeKitManager.productLoadingError {
                                 Text(error.localizedDescription)
                             } else if viewModel.products.isEmpty {
@@ -117,9 +116,10 @@ public struct PaywallView: View {
 
                         Button(action: manageSubscriptionAction) {
                             Text("Manage Subscriptions")
-                                .font(Font(configuration.linkStyle.font))
-                                .foregroundStyle(Color(configuration.linkStyle.color))
+                                .font(configuration.linkStyle.font.swiftUIFont)
+                                .foregroundStyle(configuration.linkStyle.color.swiftUIColor)
                         }
+                        .disabled(storeKitManager.isProductPurchasing)
                         .frame(maxWidth: .infinity)
                         .padding(5)
 
@@ -127,18 +127,20 @@ public struct PaywallView: View {
                             if let terms = configuration.terms {
                                 Button(action: termsAndConditionAction) {
                                     Text(terms.title)
-                                        .font(Font(configuration.linkStyle.font))
-                                        .foregroundStyle(Color(configuration.linkStyle.color))
+                                        .font(configuration.linkStyle.font.swiftUIFont)
+                                        .foregroundStyle(configuration.linkStyle.color.swiftUIColor)
                                 }
+                                .disabled(storeKitManager.isProductPurchasing)
                                 .frame(maxWidth: .infinity)
                                 .padding(5)
                             }
                             if let privacyPolicy = configuration.privacyPolicy {
                                 Button(action: privacyPolicyAction) {
                                     Text(privacyPolicy.title)
-                                        .font(Font(configuration.linkStyle.font))
-                                        .foregroundStyle(Color(configuration.linkStyle.color))
+                                        .font(configuration.linkStyle.font.swiftUIFont)
+                                        .foregroundStyle(configuration.linkStyle.color.swiftUIColor)
                                 }
+                                .disabled(storeKitManager.isProductPurchasing)
                                 .frame(maxWidth: .infinity)
                                 .padding(5)
                             }
@@ -163,11 +165,9 @@ public struct PaywallView: View {
                                snapshot.isEligibleForIntroOffer {
                                 VStack {
                                     Text(introOffer.formatted)
-                                        .font(Font(configuration.actionButton.font.withSize(15)).weight(.regular))
-                                        .foregroundStyle(Color(configuration.tintColor))
+                                        .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.regular))
                                     Text("No commitment. Cancel anytime.")
-                                        .font(Font(configuration.actionButton.font.withSize(12)).weight(.light))
-                                        .foregroundStyle(Color(configuration.tintColor))
+                                        .font(configuration.actionButton.font.withSize(12).swiftUIFont.weight(.light))
                                 }
                             }
 
@@ -177,8 +177,8 @@ public struct PaywallView: View {
                                     .padding()
     //                                .background(callToActionBackground)
     //                                .cornerRadius(20)
-                                    .foregroundStyle(.white)
-                                    .font(Font(configuration.actionButton.font))
+                                    .foregroundStyle(configuration.backgroundColor.swiftUIColor)
+                                    .font(configuration.actionButton.font.swiftUIFont)
                             }
                             .defaultGlassStyle()
     //                        .background(callToActionBackground)
@@ -189,7 +189,7 @@ public struct PaywallView: View {
                         }
                         .padding()
                         .background(.ultraThinMaterial)
-                        .colorScheme(.light)
+//                        .colorScheme(.light)
                         .alert("Error!", isPresented: $storeKitManager.isProductPurchasingError, actions: {
                             Button("OK", action: {})
                         }, message: {
@@ -232,7 +232,8 @@ public struct PaywallView: View {
         }
         .disabled(storeKitManager.isProductPurchasing)
         .interactiveDismissDisabled(storeKitManager.isProductPurchasing)
-        .tint(Color(uiColor: configuration.tintColor))
+        .tint(configuration.foregroundColor.swiftUIColor)
+        .foregroundStyle(configuration.foregroundColor.swiftUIColor)
         .navigationViewStyle(.stack)
     }
 
@@ -268,7 +269,7 @@ public struct PaywallView: View {
 
                 await MainActor.run {
                     switch result {
-                    case .success:
+                    case .success, .restored:
                         HapticGenerator.shared.success()
                     case .pending:
                         HapticGenerator.shared.warning()
@@ -290,8 +291,21 @@ public struct PaywallView: View {
     private func restorePurchaseAction() {
         HapticGenerator.shared.softImpact()
 
-        Task  {
-            await storeKitManager.restorePurchases()
+        Task {
+            let result = await storeKitManager.restorePurchases()
+
+            await MainActor.run {
+                switch result {
+                case .success, .restored:
+                    HapticGenerator.shared.success()
+                case .pending:
+                    HapticGenerator.shared.warning()
+                case .userCancelled:
+                    break
+                case .failure:
+                    HapticGenerator.shared.error()
+                }
+            }
         }
     }
 
@@ -329,7 +343,7 @@ extension PaywallView {
             ForEach(viewModel.products, id: \.self) { product in
                 CardProductView(product: product,
                                 productStyle: productStyle,
-                                tintColor: Color(uiColor: configuration.tintColor),
+                                configuration: configuration,
                                 selectedProductId: $viewModel.selectedProductId,
                                 isActive: PurchaseStatusManager.shared.isActive(productID: product.id),
                                 isOnlyAvailableProduct: configuration.productIds.count <= 1
@@ -344,7 +358,7 @@ extension PaywallView {
             ForEach(viewModel.products, id: \.self) { product in
                 ListProductView(product: product,
                                 productStyle: productStyle,
-                                tintColor: Color(uiColor: configuration.tintColor),
+                                configuration: configuration,
                                 selectedProductId: $viewModel.selectedProductId,
                                 isActive: PurchaseStatusManager.shared.isActive(productID: product.id))
             }

@@ -50,10 +50,20 @@ final class PaywallManager: NSObject {
         ])
     }
 
+    func paywallView() -> some View {
+        PaywallView(configuration: configuration)
+    }
+
     // MARK: - Present Paywall
     @objc
     func present(from controller: UIViewController, themeColor: UIColor) {
 
+        let hostingController = UIHostingController(rootView: paywallView())
+//        hostingController.modalPresentationStyle = .fullScreen
+        controller.present(hostingController, animated: true)
+    }
+
+    var configuration: PaywallConfiguration {
         let semibold30 = UIFont(name: "ChalkboardSE-Bold", size: 30)!
         let semibold20 = UIFont(name: "ChalkboardSE-Bold", size: 20)!
         let semibold18 = UIFont(name: "ChalkboardSE-Bold", size: 18)!
@@ -63,51 +73,43 @@ final class PaywallManager: NSObject {
         let light15 = UIFont(name: "ChalkboardSE-Light", size: 15)!
         let light12 = UIFont(name: "ChalkboardSE-Light", size: 12)!
 
-//        let semibold30 = UIFont(name: "KohinoorBangla-Semibold", size: 30)!
-//        let semibold20 = UIFont(name: "KohinoorBangla-Semibold", size: 20)!
-//        let semibold15 = UIFont(name: "KohinoorBangla-Semibold", size: 15)!
-//        let regular15 = UIFont(name: "KohinoorBangla-Regular", size: 15)!
-//        let light12 = UIFont(name: "KohinoorBangla-Light", size: 12)!
-        let themeColor = UIColor.systemPink
+        let foregroundColor = UIColor.systemYellow
+        let backgroundColor = UIColor.systemBlue
 
         var configuration = PaywallConfiguration()
-        configuration.elements.append(.logo(.init(UIImage(named:"ruler_logo")!, backgroundColor: themeColor)))
-        configuration.elements.append(.title(.init("Unlock Pro Features", style: .init(font: semibold30, color: themeColor))))
-        configuration.elements.append(.subtitle(.init("Get access to all our pro features", style: .init(font: semibold15, color: themeColor))))
+        configuration.elements.append(.logo(.init(UIImage(named:"ruler_logo")!, backgroundColor: foregroundColor)))
+        configuration.elements.append(.title(.init("Unlock Pro Features", style: .init(font: semibold30, color: foregroundColor))))
+        configuration.elements.append(.subtitle(.init("Get access to all our pro features", style: .init(font: semibold15, color: foregroundColor))))
         configuration.elements.append(.feature(.init(titles: ["Remove all ads",
                                                               "Customize Color Themes",
                                                               "Unlock Pixel Ratio feature",
                                                               "Persist Your Settings"],
-                                                     icon: .init(UIImage(systemName: "checkmark.circle.fill")!, color: themeColor),
-                                                     style: .init(font: regular15, color: themeColor))))
+                                                     icon: .init(UIImage(systemName: "checkmark.circle.fill")!, color: foregroundColor),
+                                                     style: .init(font: regular15, color: foregroundColor))))
 
         configuration.elements.append(.product(.init(style: .card,
-                                                     nameStyle: .init(font: semibold20, color: themeColor),
-                                                     priceStyle: .init(font: semibold20, color: themeColor),
-                                                     subscriptionPeriodStyle: .init(font: light12, color: themeColor),
-                                                     descriptionStyle:.init(font: regular15, color: themeColor)
+                                                     nameStyle: .init(font: semibold20, color: foregroundColor),
+                                                     priceStyle: .init(font: semibold20, color: foregroundColor),
+                                                     subscriptionPeriodStyle: .init(font: light12, color: foregroundColor),
+                                                     descriptionStyle:.init(font: regular15, color: foregroundColor)
                                                     ))
         )
 
         configuration.productIds = [
-            "com.infoenum.ruler.monthly",
-            "com.infoenum.ruler.yearly",
-            "com.infoenum.ruler.one_time_purchase"
+            Self.monthlyProductID,
+            Self.yearlyProductID,
+            Self.lifetimeProductID,
         ]
-        configuration.recommendedProductId = "com.infoenum.ruler.yearly"
+        configuration.recommendedProductId = Self.yearlyProductID
 
         configuration.actionButton.font = semibold20
 
         configuration.terms = .init("Terms & Conditions", url: URL(string: "https://www.termsAndConditions.com")!)
         configuration.privacyPolicy = .init("Privacy Policy", url: URL(string: "https://www.privacyPolicy.com")!)
 
-//        configuration.backgroundColor = UIColor.systemYellow
-        configuration.backgroundColor = UIColor.white
-        configuration.tintColor = themeColor
-        configuration.linkStyle = .init(font: regular15, color: themeColor)
-
-        let hostingController = UIHostingController(rootView: PaywallView(configuration: configuration))
-//        hostingController.modalPresentationStyle = .fullScreen
-        controller.present(hostingController, animated: true)
+        configuration.backgroundColor = backgroundColor
+        configuration.foregroundColor = foregroundColor
+        configuration.linkStyle = .init(font: regular15, color: foregroundColor)
+        return configuration
     }
 }

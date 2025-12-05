@@ -18,10 +18,6 @@ public class IQPaywallUI: NSObject {
         StoreKitManager.shared.configure(productIDs: productIds)
     }
 
-    public static func paywallViewController(with configuration: PaywallConfiguration) -> UIViewController {
-        return UIHostingController(rootView: PaywallView(configuration: configuration))
-    }
-
     // MARK: - AppAccount token (unchanged)
     public func appAccountToken(for userID: Int) -> UUID {
         // 1) बनाइये एक deterministic input string

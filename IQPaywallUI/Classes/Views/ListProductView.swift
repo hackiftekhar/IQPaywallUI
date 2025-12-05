@@ -9,7 +9,7 @@ internal struct ListProductView: View {
     // MARK: Inputs
     let product: Product
     let productStyle: PaywallConfiguration.Product
-    let tintColor: Color
+    let configuration: PaywallConfiguration
     @Binding var selectedProductId: String?
     let isActive: Bool
 
@@ -21,25 +21,25 @@ internal struct ListProductView: View {
 
                 Image(systemName: product.id == selectedProductId ? "checkmark.circle.fill" : "circle")
                     .imageScale(.large)
-                    .foregroundStyle(product.id == selectedProductId ? .white : tintColor)
+                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : configuration.foregroundColor.swiftUIColor)
 
                 VStack(alignment: .leading) {
                     HStack {
                         Text(product.displayName)
-                            .font(Font(productStyle.nameStyle.font))
-                            .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.nameStyle.color))
+                            .font(productStyle.nameStyle.font.swiftUIFont)
+                            .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.nameStyle.color.swiftUIColor)
                         if isActive {
                             Text("(Current)")
-                                .font(Font(productStyle.descriptionStyle.font))
-                                .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.descriptionStyle.color))
+                                .font(productStyle.descriptionStyle.font.swiftUIFont)
+                                .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.descriptionStyle.color.swiftUIColor)
                         }
                         Spacer()
                     }
 
                      Text(product.description)
                         .multilineTextAlignment(.leading)
-                        .font(Font(productStyle.descriptionStyle.font))
-                        .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.descriptionStyle.color))
+                        .font(productStyle.descriptionStyle.font.swiftUIFont)
+                        .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.descriptionStyle.color.swiftUIColor)
                         .truncationMode(.tail)
 
                     if let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id),
@@ -49,8 +49,8 @@ internal struct ListProductView: View {
                            snapshot.isEligibleForIntroOffer {
                         VStack(alignment: .leading) {
                             Text(introOffer.formatted)
-                                .font(Font(productStyle.subscriptionPeriodStyle.font))
-                                .foregroundStyle(product.id == selectedProductId ? .white : Color(uiColor: productStyle.subscriptionPeriodStyle.color))
+                                .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
+                                .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.subscriptionPeriodStyle.color.swiftUIColor)
     //                        Text("No commitment. Cancel anytime.")
     //                            .font(Font(productStyle.subscriptionPeriodStyle.font))
     //                            .foregroundStyle(Color(productStyle.subscriptionPeriodStyle.color))
@@ -62,8 +62,8 @@ internal struct ListProductView: View {
 
                 VStack(alignment: .trailing) {
                     Text(product.displayPrice)
-                        .font(Font(productStyle.priceStyle.font))
-                        .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.priceStyle.color))
+                        .font(productStyle.priceStyle.font.swiftUIFont)
+                        .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.priceStyle.color.swiftUIColor)
                     Group {
                         switch product.type {
                         case .consumable:
@@ -86,18 +86,18 @@ internal struct ListProductView: View {
                             Text("")
                         }
                     }
-                    .font(Font(productStyle.subscriptionPeriodStyle.font))
-                    .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.subscriptionPeriodStyle.color))
+                    .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
+                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.subscriptionPeriodStyle.color.swiftUIColor)
                 }
             }
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 25)
-                .stroke(tintColor, lineWidth: 1)
+                .stroke(configuration.foregroundColor.swiftUIColor, lineWidth: 1)
                 .background(
                     RoundedRectangle(cornerRadius: 25)
-                        .fill(tintColor.opacity(product.id == selectedProductId ? 1.0 : 0.05))
+                        .fill(configuration.foregroundColor.swiftUIColor.opacity(product.id == selectedProductId ? 1.0 : 0.05))
                 )
                 .backwardCompatibleGlassEffect()
         )

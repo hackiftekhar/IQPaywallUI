@@ -9,7 +9,7 @@ internal struct CardProductView: View {
     // MARK: Inputs
     let product: Product
     let productStyle: PaywallConfiguration.Product
-    let tintColor: Color
+    let configuration: PaywallConfiguration
     @Binding var selectedProductId: String?
     let isActive: Bool
     let isOnlyAvailableProduct: Bool
@@ -21,12 +21,12 @@ internal struct CardProductView: View {
             VStack(alignment: .leading, spacing: 6) {
 
                 Text(product.displayName)
-                    .font(Font(productStyle.nameStyle.font))
-                    .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.nameStyle.color))
+                    .font(productStyle.nameStyle.font.swiftUIFont)
+                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.nameStyle.color.swiftUIColor)
 
                 Text(product.displayPrice)
-                    .font(Font(productStyle.priceStyle.font))
-                    .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.priceStyle.color))
+                    .font(productStyle.priceStyle.font.swiftUIFont)
+                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.priceStyle.color.swiftUIColor)
 
                 Group {
                     switch product.type {
@@ -50,8 +50,8 @@ internal struct CardProductView: View {
                         Text("")
                     }
                 }
-                .font(Font(productStyle.subscriptionPeriodStyle.font))
-                .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.subscriptionPeriodStyle.color))
+                .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
+                .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.subscriptionPeriodStyle.color.swiftUIColor)
 
     //            if let period = product.subscription?.subscriptionPeriod {
     //                Text(billingText(for: period))
@@ -62,8 +62,8 @@ internal struct CardProductView: View {
                 Text(product.description)
                     .lineLimit(5)
                     .multilineTextAlignment(.leading)
-                    .font(Font(productStyle.descriptionStyle.font))
-                    .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.descriptionStyle.color))
+                    .font(productStyle.descriptionStyle.font.swiftUIFont)
+                    .foregroundColor(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.descriptionStyle.color.swiftUIColor)
                     .truncationMode(.tail)
             }
             .padding()
@@ -72,35 +72,26 @@ internal struct CardProductView: View {
         .frame(height: 220)
         .background(
             RoundedRectangle(cornerRadius: 25)
-                .stroke(tintColor, lineWidth: 1)
+                .stroke(configuration.foregroundColor.swiftUIColor, lineWidth: 1)
                 .background(
                     RoundedRectangle(cornerRadius: 25)
-                        .fill(tintColor.opacity(product.id == selectedProductId ? 1.0 : 0.05))
+                        .fill(configuration.foregroundColor.swiftUIColor.opacity(product.id == selectedProductId ? 1.0 : 0.05))
                 )
                 .backwardCompatibleGlassEffect()
         )
-
-//        .background(
-//            RoundedRectangle(cornerRadius: 16)
-//                .fill(product.id == selectedProductId ? tintColor : tintColor.opacity(0.1))
-//        )
-//        .overlay(
-//            RoundedRectangle(cornerRadius: 16)
-//                .stroke(product.id == selectedProductId ? tintColor : Color.clear, lineWidth: 2)
-//        )
         .overlay(alignment: .top) {
             if isActive {
                 Text("Current")
-                    .font(Font(productStyle.nameStyle.font.withSize(10)))
-                    .foregroundColor(product.id == selectedProductId ? tintColor : .white)
+                    .font(productStyle.nameStyle.font.withSize(10).swiftUIFont)
+                    .foregroundColor(product.id == selectedProductId ? configuration.foregroundColor.swiftUIColor : configuration.backgroundColor.swiftUIColor)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(tintColor, lineWidth: 1)
+                            .stroke(configuration.foregroundColor.swiftUIColor, lineWidth: 1)
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(product.id == selectedProductId ? .white : Color(uiColor: productStyle.nameStyle.color))
+                                    .fill(product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : productStyle.nameStyle.color.swiftUIColor)
                             )
                     )
                     .offset(y: -8)

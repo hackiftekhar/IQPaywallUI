@@ -151,7 +151,7 @@ extension StoreKitManager {
         await MainActor.run {
             isProductPurchasing = false
             switch finalResult {
-            case .success/*(let transaction)*/:
+            case .success, .restored:
                 break
             case .pending:
                 isProductPurchasingError = true
@@ -168,26 +168,35 @@ extension StoreKitManager {
     }
     
     /// Restore purchases
-    public func restorePurchases() async -> Result<Void, Error> {
+    public func restorePurchases() async -> PurchaseState {
         await MainActor.run {
             isProductPurchasing = true
             isProductPurchasingError = false
             productPurchaseError = nil
         }
 
-        let finalResult: Result<Void, Error>
+        let finalResult: PurchaseState
         do {
             try await AppStore.sync()
             await inAppServer.refreshStatuses(self.products)
-            finalResult = .success(())
+            finalResult = .restored
         } catch {
-            finalResult = .failure(error)
+            if let storeKitError = error as? StoreKitError, case .userCancelled = storeKitError {
+                finalResult = .userCancelled
+            } else {
+                finalResult = .failure(error: error)
+            }
         }
 
         await MainActor.run {
             isProductPurchasing = false
             switch finalResult {
-            case .success:
+            case .success, .restored:
+                break
+            case .pending:
+                isProductPurchasingError = true
+                productPurchaseError = NSError(domain: "IAP", code: -1, userInfo: [NSLocalizedDescriptionKey: "Purchase is Pending to be Completed!"])
+            case .userCancelled:
                 break
             case .failure(let error):
                 isProductPurchasingError = true
