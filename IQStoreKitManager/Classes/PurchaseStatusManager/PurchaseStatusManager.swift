@@ -9,12 +9,10 @@ public final class PurchaseStatusManager: NSObject {
 
     @objc public static let shared = PurchaseStatusManager()
 
-    private let receiptFetcher = AppReceiptFetcher()
-
     @objc
     public static let purchaseStatusDidChangedNotification: Notification.Name = Notification.Name("PurchaseStatusDidChangedNotification")
 
-    // Cache status snapshots per productID (main-actor mutation)
+    // Cache status snapshots per productID
     private var snapshotStatus: [String: ProductSnapshot] = [:]
 
     private override init() {
@@ -22,11 +20,9 @@ public final class PurchaseStatusManager: NSObject {
         snapshotStatus = (try? self.cachedSnapshot()) ?? [:]
     }
 
-    @objc public var currentlyActivePlan: ProductStatus? {
-        guard let snapshot = self.snapshotStatus.values.first(where: { $0.isActive } ) else {
-            return nil
-        }
-        return ProductStatus(from: snapshot)
+    @objc public var activePlans: [ProductStatus] {
+        let snapshots = self.snapshotStatus.values.filter { $0.isActive }
+        return snapshots.map { .init(from: $0) }
     }
 
     /// Snapshot for UI (active, grace, retry, etc.)
@@ -36,6 +32,10 @@ public final class PurchaseStatusManager: NSObject {
         }
         return ProductStatus(from: snapshot)
 
+    }
+
+    @objc public func status(productID: String) -> ActiveStatus {
+         return snapshotStatus[productID]?.status ?? .inactive
     }
 
     @objc public func isActive(productID: String) -> Bool {
@@ -74,47 +74,30 @@ internal extension PurchaseStatusManager {
                     } else {
                         // produce a minimal snapshot when status can't be fetched
                         let snap = ProductSnapshot(
-                            productID: product.id,
-                            state: .expired,
-                            willAutoRenew: false,
-                            nextRenewalDate: nil,
-                            expirationDate: nil,
+                            product: product,
                             isEligibleForIntroOffer: await isEligibleForIntroOffer(for: product),
-                            isFamilyShareable: product.isFamilyShareable,
-                            ownershipType: nil
-//                            environment: product.environment
+                            status: nil
                         )
                         newSnapshots[product.id] = snap
                     }
                 }
             } else {
+
+                let introEligible = await isEligibleForIntroOffer(for: product)
                 // Non-subscription product — try to find a latest transaction
-                if let txn = await StoreKitManager.shared.latestTransaction(for: product.id) {
-                    let snap = ProductSnapshot(
-                        productID: product.id,
-                        state: .subscribed,
-                        willAutoRenew: false,
-                        nextRenewalDate: nil,
-                        expirationDate: nil,
-                        isEligibleForIntroOffer: await isEligibleForIntroOffer(for: product),
-                        isFamilyShareable: product.isFamilyShareable,
-                        ownershipType: txn.ownershipType
-                    )
+                if let transaction = await StoreKitManager.shared.latestTransaction(for: product.id) {
+                    let snap = ProductSnapshot(product: product,
+                                               isEligibleForIntroOffer: introEligible,
+                                               transaction: transaction)
                     newSnapshots[product.id] = snap
                 } else if let cached = cachedSnapshots[product.id] {
                     newSnapshots[product.id] = cached
                 } else {
                     // produce a minimal snapshot when status can't be fetched
                     let snap = ProductSnapshot(
-                        productID: product.id,
-                        state: .expired,
-                        willAutoRenew: false,
-                        nextRenewalDate: nil,
-                        expirationDate: nil,
-                        isEligibleForIntroOffer: await isEligibleForIntroOffer(for: product),
-                        isFamilyShareable: product.isFamilyShareable,
-                        ownershipType: nil
-//                            environment: product.environment
+                        product: product,
+                        isEligibleForIntroOffer: introEligible,
+                        status: nil
                     )
                     newSnapshots[product.id] = snap
                 }
@@ -128,12 +111,16 @@ internal extension PurchaseStatusManager {
             }
         }
         try? persistSnapshot(newSnapshots)
+
     }
 
     private func bestSnapshot(for product: Product, statuses: [Product.SubscriptionInfo.Status]) async -> ProductSnapshot? {
         // Prefer currently active-ish states first
 
-        let filtered = statuses.filter { (try? $0.transaction.payloadValue.productID) == product.id }
+        let filtered = statuses.filter {
+            (try? $0.renewalInfo.payloadValue.currentProductID) == product.id ||
+            (try? $0.renewalInfo.payloadValue.autoRenewPreference) == product.id
+        }
 
         let preferredOrder: [Product.SubscriptionInfo.RenewalState] = [.subscribed, .inGracePeriod, .inBillingRetryPeriod, .expired, .revoked]
 
@@ -151,45 +138,12 @@ internal extension PurchaseStatusManager {
             return (lDate ?? .distantPast) > (rDate ?? .distantPast)
         }
 
-        guard let top = sorted.first else {
-            // No status — construct minimal
-            return ProductSnapshot(
-                productID: product.id,
-                state: .expired,
-                willAutoRenew: false,
-                nextRenewalDate: nil,
-                expirationDate: nil,
-                isEligibleForIntroOffer: await isEligibleForIntroOffer(for: product),
-                isFamilyShareable: product.isFamilyShareable,
-                ownershipType: nil
-//                environment: nil
-            )
-        }
-
-        // Verify objects
-        let txn: Transaction? = (try? StoreKitManager.verify(top.transaction))
-        let renewalInfo: Product.SubscriptionInfo.RenewalInfo? = try? StoreKitManager.verify(top.renewalInfo)
-
-        // Derive details
-        let willAutoRenew = renewalInfo?.willAutoRenew ?? false
-        let nextRenewalDate = renewalInfo?.renewalDate
-        let expirationDate = txn?.expirationDate
-
         let introEligible = await isEligibleForIntroOffer(for: product)
-        let ownership = txn?.ownershipType
-//        let env = txn?.environment
 
         return ProductSnapshot(
-            productID: product.id,
-            state: top.state,
-            willAutoRenew: willAutoRenew,
-            nextRenewalDate: nextRenewalDate,
-            expirationDate: expirationDate,
+            product: product,
             isEligibleForIntroOffer: introEligible,
-            isFamilyShareable: product.isFamilyShareable,
-            ownershipType: ownership
-//            environment: env
-        )
+            status: sorted.first)
     }
 
     /// Intro offer eligibility (best available)
@@ -204,24 +158,6 @@ internal extension PurchaseStatusManager {
             return statuses.isEmpty
         } catch {
             return false
-        }
-    }
-}
-
-internal extension PurchaseStatusManager {
-    /// Send a transaction and optional renewal info JWS to your server to validate and grant entitlements.
-    func validate(transaction: Transaction, renewalInfo: Product.SubscriptionInfo.RenewalInfo?, appAccountToken: UUID?) async throws {
-
-        let receiptToken = try await receiptFetcher.fetchBase64Receipt()
-
-        var params: [String:String] = [:]
-        params["receipt_token"] = receiptToken
-        params["product_id"] = transaction.productID
-//        params["environment"] = transaction.environment.rawValue
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-//            APIClient.purchasePlan(param: params) { result in
-                continuation.resume(returning: ())
-//            }
         }
     }
 }

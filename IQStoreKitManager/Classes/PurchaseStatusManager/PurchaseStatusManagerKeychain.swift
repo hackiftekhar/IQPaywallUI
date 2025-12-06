@@ -4,7 +4,7 @@
 import Foundation
 import Security
 
-internal final class StoreKitInAppServerKeychain: NSObject {
+internal final class PurchaseStatusManagerKeychain: NSObject {
     private static let access: CFString = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
     private static let service: String = Bundle.main.bundleIdentifier ?? "com.paywallUI.paywallUI"
 
@@ -27,17 +27,17 @@ internal final class StoreKitInAppServerKeychain: NSObject {
         if status == errSecSuccess {
             let statusUpdate = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
             guard statusUpdate == errSecSuccess else {
-                throw NSError(domain: "StoreKitInAppServerKeychain", code: Int(statusUpdate), userInfo: nil)
+                throw NSError(domain: "\(Self.self)", code: Int(statusUpdate), userInfo: nil)
             }
         } else if status == errSecItemNotFound {
             var addQuery = query
             addQuery.merge(attributes) { (_, new) in new }
             let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
             guard addStatus == errSecSuccess else {
-                throw NSError(domain: "StoreKitInAppServerKeychain", code: Int(addStatus), userInfo: nil)
+                throw NSError(domain: "\(Self.self)", code: Int(addStatus), userInfo: nil)
             }
         } else {
-            throw NSError(domain: "StoreKitInAppServerKeychain", code: Int(status), userInfo: nil)
+            throw NSError(domain: "\(Self.self)", code: Int(status), userInfo: nil)
         }
     }
 
@@ -54,10 +54,10 @@ internal final class StoreKitInAppServerKeychain: NSObject {
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecSuccess {
-            guard let data = result as? Data else { throw NSError(domain: "StoreKitInAppServerKeychain", code: -1, userInfo: nil) }
+            guard let data = result as? Data else { throw NSError(domain: "\(Self.self)", code: -1, userInfo: nil) }
             return data
         } else {
-            throw NSError(domain: "StoreKitInAppServerKeychain", code: Int(status), userInfo: nil)
+            throw NSError(domain: "\(Self.self)", code: Int(status), userInfo: nil)
         }
     }
 
@@ -71,7 +71,7 @@ internal final class StoreKitInAppServerKeychain: NSObject {
 
         let status = SecItemDelete(query as CFDictionary)
         if status != errSecSuccess && status != errSecItemNotFound {
-            throw NSError(domain: "StoreKitInAppServerKeychain", code: Int(status), userInfo: nil)
+            throw NSError(domain: "\(Self.self)", code: Int(status), userInfo: nil)
         }
     }
 }

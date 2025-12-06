@@ -7,11 +7,10 @@ import StoreKit
 internal struct CardProductView: View {
 
     // MARK: Inputs
-    let product: Product
+    let product: ProductInfo
     let productStyle: PaywallConfiguration.Product
     let configuration: PaywallConfiguration
     @Binding var selectedProductId: String?
-    let isActive: Bool
     let isOnlyAvailableProduct: Bool
 
     var titleForegroundColor: Color {
@@ -69,12 +68,6 @@ internal struct CardProductView: View {
                 .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
                 .foregroundColor(subscriptionPeriodColor)
 
-    //            if let period = product.subscription?.subscriptionPeriod {
-    //                Text(billingText(for: period))
-    //                    .font(Font(productStyle.subscriptionPeriodStyle.font))
-    //                    .foregroundColor(product.id == selectedProductId ? .white : Color(uiColor: productStyle.subscriptionPeriodStyle.color))
-    //            }
-
                 Text(product.description)
                     .lineLimit(5)
                     .multilineTextAlignment(.leading)
@@ -82,7 +75,7 @@ internal struct CardProductView: View {
                     .foregroundColor(descriptionColor)
                     .truncationMode(.tail)
             }
-            .padding()
+            .padding(5)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 220)
@@ -96,8 +89,8 @@ internal struct CardProductView: View {
                 .backwardCompatibleGlassEffect()
         )
         .overlay(alignment: .top) {
-            if isActive {
-                Text("Current")
+            if product.status != .inactive {
+                Text(product.status.displayName)
                     .font(productStyle.nameStyle.font.withSize(10).swiftUIFont)
                     .foregroundColor(product.id == selectedProductId ? configuration.foregroundColor.swiftUIColor : configuration.backgroundColor.swiftUIColor)
                     .padding(.horizontal, 10)

@@ -12,7 +12,7 @@ internal final class AppReceiptFetcher: NSObject, SKRequestDelegate {
 
     private var continuations: [NSObject:CheckedContinuation<Void, Error>] = [:]
 
-    func fetchBase64Receipt(forceRefresh: Bool = false) async throws -> String {
+    func fetchBase64Receipt(forceRefresh: Bool = false) async throws -> Data {
         if let base64 = readBase64Receipt(), !forceRefresh {
             return base64
         }
@@ -23,12 +23,12 @@ internal final class AppReceiptFetcher: NSObject, SKRequestDelegate {
         return base64
     }
 
-    private func readBase64Receipt() -> String? {
+    private func readBase64Receipt() -> Data? {
         guard let url = Bundle.main.appStoreReceiptURL,
               let data = try? Data(contentsOf: url) else {
             return nil
         }
-        return data.base64EncodedString()
+        return data
     }
 
     private func refreshReceipt() async throws {

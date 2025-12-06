@@ -3,16 +3,14 @@
 
 import SwiftUI
 import StoreKit
-import IQStoreKitManager
 
 internal struct ListProductView: View {
 
     // MARK: Inputs
-    let product: Product
+    let product: ProductInfo
     let productStyle: PaywallConfiguration.Product
     let configuration: PaywallConfiguration
     @Binding var selectedProductId: String?
-    let isActive: Bool
 
     var titleForegroundColor: Color {
         product.id == selectedProductId ? configuration.backgroundColor.swiftUIColor : (productStyle.nameStyle.color?.swiftUIColor ?? configuration.foregroundColor.swiftUIColor)
@@ -45,8 +43,8 @@ internal struct ListProductView: View {
                         Text(product.displayName)
                             .font(productStyle.nameStyle.font.swiftUIFont)
                             .foregroundColor(titleForegroundColor)
-                        if isActive {
-                            Text("(Current)")
+                        if product.status != .inactive {
+                            Text("(\(product.status.displayName))")
                                 .font(productStyle.descriptionStyle.font.swiftUIFont)
                                 .foregroundColor(descriptionColor)
                         }
@@ -59,11 +57,10 @@ internal struct ListProductView: View {
                         .foregroundColor(descriptionColor)
                         .truncationMode(.tail)
 
-                    if let snapshot = PurchaseStatusManager.shared.snapshot(for: product.id),
-                       !snapshot.isActive,
+                    if !product.isActive,
                        let subscription = product.subscription,
                         let introOffer = subscription.introductoryOffer,
-                           snapshot.isEligibleForIntroOffer {
+                       product.isEligibleForIntroOffer {
                         VStack(alignment: .leading) {
                             Text(introOffer.formatted)
                                 .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)

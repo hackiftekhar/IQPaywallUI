@@ -4,33 +4,38 @@
 import Foundation
 import StoreKit
 
+public protocol StoreKitManagerDelegate: AnyObject {
+    func deliver(product: Product, transaction: StoreKit.Transaction, renewalInfo: Product.SubscriptionInfo.RenewalInfo?, receiptData:Data, appAccountToken: UUID?, completion: @escaping ((Swift.Result<Void, Error>) -> Void))
+
+    func generateSignature(product: Product, offerID: String, appAccountToken: UUID?, completion: @escaping ((Swift.Result<OfferSignature, Error>) -> Void))
+}
+
+extension StoreKitManagerDelegate {
+
+    func deliver(product: Product, transaction: StoreKit.Transaction, renewalInfo: Product.SubscriptionInfo.RenewalInfo?, receiptData:Data, appAccountToken: UUID?, completion: @escaping ((Swift.Result<Void, Error>) -> Void)) {
+        completion(.success(()))
+    }
+
+    func generateSignature(product: Product, offerID: String, appAccountToken: UUID?, completion: @escaping ((Swift.Result<OfferSignature, Error>) -> Void)) {
+        fatalError("You must implement \(#function) and generate an offer signature")
+    }
+}
+
 // StoreKit 2 manager
 @objc
 public final class StoreKitManager: NSObject, ObservableObject {
     @objc static public let shared = StoreKitManager()
 
+    private let receiptFetcher = AppReceiptFetcher()
+
+    // For cancelled subscriptions, we don't get a realtime update, so we schedule a refresh timer
+    private var refreshTimer: Timer?
+
+    weak var delegate: StoreKitManagerDelegate?
+
     // MARK: - Configuration
     private var productIDs: [String] = []
     private var products: [Product] = []
-
-    @MainActor
-    @Published @objc public var isProductLoading: Bool = false
-
-    @MainActor
-    @Published @objc public var isProductLoadingError: Bool = false
-
-    @MainActor
-    @Published @objc public var productLoadingError: Error? = nil
-
-
-    @MainActor
-    @Published @objc public var isProductPurchasing: Bool = false
-
-    @MainActor
-    @Published @objc public var isProductPurchasingError: Bool = false
-
-    @MainActor
-    @Published @objc public var productPurchaseError: Error? = nil
 
     // Observe transactions
     private var updatesTask: Task<Void, Never>?
@@ -38,7 +43,7 @@ public final class StoreKitManager: NSObject, ObservableObject {
     // Optional user linking
     private(set) var appAccountToken: UUID?
 
-    private let inAppServer = PurchaseStatusManager.shared
+    private let purchaseStatusManager = PurchaseStatusManager.shared
 
     private override init() {
         super.init()
@@ -50,12 +55,38 @@ public final class StoreKitManager: NSObject, ObservableObject {
     }
 
     @objc public func configure(productIDs: [String]) {
+        configure(productIDs: productIDs, delegate: nil)
+    }
+
+    public func configure(productIDs: [String], delegate: StoreKitManagerDelegate?) {
         self.productIDs = productIDs
+        self.delegate = delegate
         Task {
             let products = await loadProducts(productIDs: productIDs)
             self.products = products
+            self.renewRefreshTimers()
             beginObservingTransactions()
+            addForegroundObserver()
         }
+    }
+
+    private func addForegroundObserver() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification,
+            object: nil,
+            queue: OperationQueue()
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            Task {
+                await self.refreshStatuses()
+            }
+        }
+    }
+
+
+    public func refreshStatuses() async {
+        await self.purchaseStatusManager.refreshStatuses(self.products)
+        self.renewRefreshTimers()
     }
 
     /// Refresh products
@@ -63,34 +94,12 @@ public final class StoreKitManager: NSObject, ObservableObject {
         var productIDs = productIDs
         if productIDs.isEmpty { productIDs = self.productIDs }
 
-        await MainActor.run {
-            isProductLoading = true
-            productLoadingError = nil
-            isProductLoadingError = false
-        }
         let products: [Product]
         do {
             products = try await loadProducts(for: productIDs)
-            await inAppServer.refreshStatuses(products)
-            await MainActor.run {
-                if products.isEmpty {
-                    productLoadingError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No products to show"])
-                    isProductLoadingError = true
-                } else {
-                    productLoadingError = nil
-                    isProductLoadingError = false
-                }
-            }
+            await purchaseStatusManager.refreshStatuses(products)
         } catch {
             products = self.products.filter({ productIDs.contains($0.id) })
-            await MainActor.run {
-                productLoadingError = error
-                isProductLoadingError = true
-            }
-        }
-
-        await MainActor.run {
-            isProductLoading = false
         }
 
         return products
@@ -105,13 +114,7 @@ public final class StoreKitManager: NSObject, ObservableObject {
 extension StoreKitManager {
 
     /// Purchase a product
-    public func purchase(product: Product) async -> PurchaseState {
-
-        await MainActor.run {
-            isProductPurchasing = true
-            isProductPurchasingError = false
-            productPurchaseError = nil
-        }
+    public func purchase(product: Product, offer: Product.SubscriptionOffer? = nil) async -> PurchaseState {
 
         let finalResult: PurchaseState
 
@@ -122,15 +125,43 @@ extension StoreKitManager {
                 options.insert(.appAccountToken(appAccountToken))
             }
 
+            if let offer = offer, let offerId = offer.id {
+                guard let delegate = delegate else {
+                    fatalError("You must set delegate and implement 'generateSignature(product:offerID:appAccountToken:completion:)' function and generate an offer signature")
+                }
+
+                let signatureResponse: OfferSignature = try await withCheckedThrowingContinuation { continuation in
+                    return delegate.generateSignature(product: product, offerID: offerId, appAccountToken: appAccountToken, completion: { result in
+                        continuation.resume(with: result)
+                    })
+                }
+
+                guard let signatureData = Data(base64Encoded: signatureResponse.signature) else {
+                    throw NSError(domain: "\(Self.self)", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid signature data"])
+                }
+
+                let nonce = UUID(uuidString:signatureResponse.nonce)!
+                options.insert(.promotionalOffer(offerID: offerId, keyID: signatureResponse.keyID, nonce: nonce, signature: signatureData, timestamp: signatureResponse.timestamp))
+            }
+
             let result = try await product.purchase(options: options)
             switch result {
             case .success(let verification):
                 do {
-                    let txn = try Self.verify(verification)
-                    let _ = try await deliverAndValidate(transaction: txn, for: product, appAccountToken: appAccountToken)
-                    await txn.finish()
-                    await inAppServer.refreshStatuses([product])
-                    finalResult = .success(transaction: txn)
+                    let transaction = try Self.verify(verification)
+                    try await self.deliver(product: product, transaction: transaction, appAccountToken: appAccountToken)
+                    await transaction.finish()
+
+                    let productsToRefresh: [Product]
+                    if product.subscription != nil {
+                        // Refreshing products of same group
+                        productsToRefresh = self.products.filter { $0.subscription?.subscriptionGroupID == product.subscription?.subscriptionGroupID }
+                    } else {
+                        productsToRefresh = [product]
+                    }
+                    await purchaseStatusManager.refreshStatuses(productsToRefresh)
+                    self.renewRefreshTimers()
+                    finalResult = .success(transaction: transaction)
                 } catch {
                     finalResult = .failure(error: error)
                 }
@@ -140,26 +171,10 @@ extension StoreKitManager {
             case .pending:
                 finalResult = .pending
             @unknown default:
-                finalResult = .failure(error: NSError(domain: "IAP", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown purchase result"]))
+                finalResult = .failure(error: NSError(domain: "\(Self.self)", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown purchase result"]))
             }
         } catch {
             finalResult = .failure(error: error)
-        }
-
-        await MainActor.run {
-            isProductPurchasing = false
-            switch finalResult {
-            case .success, .restored:
-                break
-            case .pending:
-                isProductPurchasingError = true
-                productPurchaseError = NSError(domain: "IAP", code: -1, userInfo: [NSLocalizedDescriptionKey: "Purchase is Pending to be Completed!"])
-            case .userCancelled:
-                break
-            case .failure(let error):
-                isProductPurchasingError = true
-                productPurchaseError = error
-            }
         }
 
         return finalResult
@@ -167,38 +182,17 @@ extension StoreKitManager {
     
     /// Restore purchases
     public func restorePurchases() async -> PurchaseState {
-        await MainActor.run {
-            isProductPurchasing = true
-            isProductPurchasingError = false
-            productPurchaseError = nil
-        }
 
         let finalResult: PurchaseState
         do {
             try await AppStore.sync()
-            await inAppServer.refreshStatuses(self.products)
+            await self.refreshStatuses()
             finalResult = .restored
         } catch {
             if let storeKitError = error as? StoreKitError, case .userCancelled = storeKitError {
                 finalResult = .userCancelled
             } else {
                 finalResult = .failure(error: error)
-            }
-        }
-
-        await MainActor.run {
-            isProductPurchasing = false
-            switch finalResult {
-            case .success, .restored:
-                break
-            case .pending:
-                isProductPurchasingError = true
-                productPurchaseError = NSError(domain: "IAP", code: -1, userInfo: [NSLocalizedDescriptionKey: "Purchase is Pending to be Completed!"])
-            case .userCancelled:
-                break
-            case .failure(let error):
-                isProductPurchasingError = true
-                productPurchaseError = error
             }
         }
 
@@ -228,10 +222,10 @@ extension StoreKitManager {
     /// Start refund request for the latest transaction of a product
     public func beginRefundRequest(for productID: String, in scene: UIWindowScene) async -> Result<StoreKit.Transaction.RefundRequestStatus, Error> {
         do {
-            guard let txn = await latestTransaction(for: productID) else {
-                return .failure(NSError(domain: "IAP", code: -2, userInfo: [NSLocalizedDescriptionKey: "No transaction found for product"]))
+            guard let transaction = await latestTransaction(for: productID) else {
+                return .failure(NSError(domain: "\(Self.self)", code: -2, userInfo: [NSLocalizedDescriptionKey: "No transaction found for product"]))
             }
-            let status = try await txn.beginRefundRequest(in: scene)
+            let status = try await transaction.beginRefundRequest(in: scene)
             return .success(status)
         } catch {
             return .failure(error)
@@ -260,26 +254,34 @@ extension StoreKitManager {
             guard let self else { return }
             for await verification in Transaction.updates {
                 do {
-                    let txn = try Self.verify(verification)
+                    let transaction = try Self.verify(verification)
+                    let product: Product? = self.products.first(where: { $0.id == transaction.productID })
+                    if let product: Product = product {
+                        try await self.deliver(product: product, transaction: transaction, appAccountToken: appAccountToken)
+                    }
+                    await transaction.finish()
+
                     // Load product to pass into deliver
-                    let product: Product? = await MainActor.run {
-                        self.products.first(where: { $0.id == txn.productID })
+                    if let product: Product = product {
+                        let productsToRefresh: [Product]
+                        if product.subscription != nil {
+                            // Refreshing products of same group
+                            productsToRefresh = self.products.filter { $0.subscription?.subscriptionGroupID == product.subscription?.subscriptionGroupID }
+                        } else {
+                            productsToRefresh = [product]
+                        }
+
+                        await self.purchaseStatusManager.refreshStatuses(productsToRefresh)
+                        self.renewRefreshTimers()
                     }
-                    if let product {
-                        let appAccountToken = appAccountToken
-                        let _ = try await self.deliverAndValidate(transaction: txn, for: product, appAccountToken: appAccountToken)
-                    }
-                    await txn.finish()
-                    if let product {
-                        await self.inAppServer.refreshStatuses([product])
-                    }
+
                 } catch {
                     // Ignore unverified
                 }
             }
         }
     }
-    
+
     private func loadProducts(for ids: [String]) async throws -> [Product] {
         guard !ids.isEmpty else { return [] }
         let products = try await Product.products(for: ids)
@@ -320,13 +322,22 @@ extension StoreKitManager {
         return nil
     }
     
-    private func deliverAndValidate(transaction: Transaction, for product: Product, appAccountToken: UUID?) async throws {
+    private func deliver(product: Product, transaction: Transaction, appAccountToken: UUID?) async throws {
         let renewalInfo = await self.renewalInfo(for: product)
-        try await self.inAppServer.validate(
-            transaction: transaction,
-            renewalInfo: renewalInfo,
-            appAccountToken: appAccountToken
-        )
+        let receiptData = try await receiptFetcher.fetchBase64Receipt()
+
+        if let delegate = delegate {
+            return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                delegate.deliver(product: product,
+                                 transaction: transaction,
+                                 renewalInfo: renewalInfo,
+                                 receiptData: receiptData,
+                                 appAccountToken: appAccountToken,
+                                 completion: { result in
+                    continuation.resume(with: result)
+                })
+            }
+        }
     }
     
     private func renewalInfo(for product: Product) async -> Product.SubscriptionInfo.RenewalInfo? {
@@ -341,5 +352,26 @@ extension StoreKitManager {
             }
         } catch {}
         return nil
+    }
+}
+
+extension StoreKitManager {
+    private func renewRefreshTimers() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+
+        let allSnapshots: [ProductStatus] = self.products.compactMap { PurchaseStatusManager.shared.snapshot(for: $0.id) }
+        let expiryDates: [Date] = allSnapshots.compactMap { $0.renewalInfo?.nextRenewalDate ?? $0.renewalInfo?.expirationDate }.sorted()
+        guard let closestExpiryDate = expiryDates.first else {
+            return
+        }
+
+        let timer = Timer(fire: closestExpiryDate, interval: 3600, repeats: false) { _ in
+            Task {
+                await self.refreshStatuses()
+            }
+        }
+        RunLoop.current.add(timer, forMode: .common)
+        refreshTimer = timer
     }
 }

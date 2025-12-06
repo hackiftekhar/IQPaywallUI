@@ -10,14 +10,18 @@ import UIKit
 import SwiftUI
 import IQPaywallUI
 import IQStoreKitManager
+import StoreKit
 
 @objc
 final class PaywallManager: NSObject {
 
     @objc static let shared = PaywallManager()
-    @objc static let monthlyProductID    = "com.infoenum.ruler.monthly"
-    @objc static let yearlyProductID     = "com.infoenum.ruler.yearly"
-    @objc static let lifetimeProductID   = "com.infoenum.ruler.one_time_purchase"
+
+    enum ProductIdentifier: String, CaseIterable {
+        case monthly = "com.infoenum.ruler.monthly"
+        case yearly = "com.infoenum.ruler.yearly"
+        case lifetime = "com.infoenum.ruler.one_time_purchase"
+    }
 
     @objc static var purchaseStatusDidChangedNotification: Notification.Name {
         return PurchaseStatusManager.purchaseStatusDidChangedNotification
@@ -39,16 +43,12 @@ final class PaywallManager: NSObject {
 
     @objc
     var currentlyActivePlan: ProductStatus? {
-        return PurchaseStatusManager.shared.currentlyActivePlan
+        return PurchaseStatusManager.shared.activePlans.first
     }
 
     @objc
     func configure() {
-        IQPaywallUI.configure(productIds: [
-            Self.monthlyProductID,
-            Self.yearlyProductID,
-            Self.lifetimeProductID,
-        ])
+        IQPaywallUI.configure(productIds: ProductIdentifier.allCases.map({ $0.rawValue }), delegate: self)
     }
 
     func paywallView() -> some View {
@@ -60,7 +60,7 @@ final class PaywallManager: NSObject {
     func present(from controller: UIViewController, themeColor: UIColor) {
 
         let hostingController = UIHostingController(rootView: paywallView())
-        //        hostingController.modalPresentationStyle = .fullScreen
+        hostingController.modalPresentationStyle = .fullScreen
         controller.present(hostingController, animated: true)
     }
 
@@ -97,12 +97,8 @@ final class PaywallManager: NSObject {
                                                     ))
         )
 
-        configuration.productIds = [
-            Self.monthlyProductID,
-            Self.yearlyProductID,
-            Self.lifetimeProductID,
-        ]
-        configuration.recommendedProductId = Self.yearlyProductID
+        configuration.productIds = ProductIdentifier.allCases.map({ $0.rawValue })
+        configuration.recommendedProductId = ProductIdentifier.yearly.rawValue
 
         configuration.actionButton.font = semibold20
 
@@ -141,4 +137,31 @@ final class PaywallManager: NSObject {
 //
 //        return configuration
 //    }
+}
+
+extension PaywallManager: StoreKitManagerDelegate {
+    func generateSignature(product: Product, offerID: String, appAccountToken: UUID?, completion: @escaping (Result<IQStoreKitManager.OfferSignature, any Error>) -> Void) {
+    }
+
+    func deliver(product: Product,
+                 transaction: StoreKit.Transaction,
+                 renewalInfo: Product.SubscriptionInfo.RenewalInfo?,
+                 receiptData: Data,
+                 appAccountToken: UUID?,
+                 completion: @escaping (Result<Void, any Error>) -> Void) {
+
+//        var params: [String:String] = [:]
+//        params["receipt_token"] = receiptData.base64EncodedString()
+//        params["product_id"] = transaction.productID
+//        params["environment"] = transaction.environment.rawValue
+//        YourAPIClient.purchasePlan(param: params) { result in
+//            switch result {
+//            case .success(let success):
+                //Server-less apps can immediately run this
+                completion(.success(()))
+//            case .failure(let failure):
+//                completion(.failure(failure))
+//            }
+//        }
+    }
 }

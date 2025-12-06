@@ -2,8 +2,6 @@
 //  IQPaywallUI.swift
 
 import Foundation
-import SwiftUI
-
 import Security
 import CryptoKit
 import IQStoreKitManager
@@ -17,6 +15,10 @@ public class IQPaywallUI: NSObject {
 
     @objc public static func configure(productIds: [String]) {
         StoreKitManager.shared.configure(productIDs: productIds)
+    }
+
+    public static func configure(productIds: [String], delegate: StoreKitManagerDelegate?) {
+        StoreKitManager.shared.configure(productIDs: productIds, delegate: delegate)
     }
 
     // MARK: - AppAccount token generation from Int type of user id

@@ -3,6 +3,22 @@
 
 import StoreKit
 
+@objc public enum ActiveStatus: Int {
+    case inactive
+    case active
+    case upcoming
+    case unlocked
+
+    public var displayName: String {
+        switch self {
+        case .inactive:  return "Inactive"
+        case .active:    return "Active"
+        case .upcoming:  return "Upcoming"
+        case .unlocked:  return "Unlocked"
+        }
+    }
+}
+
 @objc public enum RenewalState: Int {
     case subscribed
     case expired
@@ -17,23 +33,27 @@ import StoreKit
     case familyShared
 }
 
-@objc public final class ProductStatus: NSObject {
-    @objc public let productID: String
-    @objc public let state: RenewalState
-    @objc public let willAutoRenew: Bool
-    @objc public let nextRenewalDate: Date?
-    @objc public let expirationDate: Date?
-    @objc public let isEligibleForIntroOffer: Bool
-    @objc public let isFamilyShareable: Bool
-    @objc public let ownershipType: OwnershipType
+@objc public enum ProductType: Int {
+    case consumable
+    case nonConsumable
+    case autoRenewable
+    case nonRenewable
+}
 
-    init(from snapshot: ProductSnapshot) {
-        self.productID = snapshot.productID
-        self.willAutoRenew = snapshot.willAutoRenew
-        self.nextRenewalDate = snapshot.nextRenewalDate
-        self.expirationDate = snapshot.expirationDate
-        self.isEligibleForIntroOffer = snapshot.isEligibleForIntroOffer
-        self.isFamilyShareable = snapshot.isFamilyShareable
+@objc public final class RenewalStatus: NSObject {
+
+    private let snapshot: RenewalSnapshot
+
+    @objc public let state: RenewalState
+    @objc public let ownershipType: OwnershipType
+    @objc public var willAutoRenew: Bool { snapshot.willAutoRenew }
+    @objc public var autoRenewPreference: String? { snapshot.autoRenewPreference }
+    @objc public var nextRenewalDate: Date? { snapshot.nextRenewalDate }
+    @objc public var expirationDate: Date? { snapshot.expirationDate }
+    @objc public var isActive: Bool { snapshot.isActive }
+
+    init(from snapshot: RenewalSnapshot) {
+        self.snapshot = snapshot
 
         switch snapshot.state {
         case .subscribed:   self.state = .subscribed
@@ -50,13 +70,42 @@ import StoreKit
         }
         super.init()
     }
+}
+
+@objc public final class ProductStatus: NSObject {
+
+    private let snapshot: ProductSnapshot
+
+    @objc public let type: ProductType
+    @objc public let renewalInfo: RenewalStatus?
+    @objc public var id: String { snapshot.id }
+    @objc public var displayName: String { snapshot.displayName }
+    @objc public var isEligibleForIntroOffer: Bool { snapshot.isEligibleForIntroOffer }
+    @objc public var isFamilyShareable: Bool { snapshot.isFamilyShareable }
+    @objc public var status: ActiveStatus { snapshot.status }
+
+    init(from snapshot: ProductSnapshot) {
+        self.snapshot = snapshot
+
+        if let renewalInfo = snapshot.renewalInfo {
+            self.renewalInfo = .init(from: renewalInfo)
+        } else {
+            self.renewalInfo = nil
+        }
+
+        switch snapshot.type {
+        case .consumable:   self.type = .consumable
+        case .nonConsumable:      self.type = .nonConsumable
+        case .autoRenewable: self.type = .autoRenewable
+        case .nonRenewable:    self.type = .nonRenewable
+        default:            self.type = .nonConsumable
+        }
+
+        super.init()
+    }
 
     @objc
     public var isActive: Bool {
-        switch state {
-        case .subscribed, .inGracePeriod, .inBillingRetryPeriod: return true
-        default: return false
-        }
+        renewalInfo?.isActive ?? false
     }
 }
-
