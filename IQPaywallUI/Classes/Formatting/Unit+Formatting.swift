@@ -14,4 +14,14 @@ extension Product.SubscriptionPeriod.Unit {
         @unknown default: return ""
         }
     }
+
+    var lyFormatted: String {
+        switch self {
+        case .day:      return "Daily"
+        case .week:     return "Weekly"
+        case .month:    return "Monthly"
+        case .year:     return "Yearly"
+        @unknown default: return ""
+        }
+    }
 }

@@ -11,6 +11,7 @@ internal struct RenewalSnapshot: Codable, Equatable {
     let willAutoRenew: Bool
     let autoRenewPreference: String?
     let nextRenewalDate: Date?
+    let gracePeriodExpirationDate: Date?
     let expirationDate: Date?
     let ownershipType: Transaction.OwnershipType?
 
@@ -23,13 +24,14 @@ internal struct RenewalSnapshot: Codable, Equatable {
         self.willAutoRenew = renewalInfo?.willAutoRenew ?? false
         self.autoRenewPreference = renewalInfo?.autoRenewPreference
         self.nextRenewalDate = renewalInfo?.renewalDate
+        self.gracePeriodExpirationDate = renewalInfo?.gracePeriodExpirationDate
         self.expirationDate = transaction.expirationDate
         self.ownershipType = transaction.ownershipType
 
         switch state {
-        case .subscribed, .inGracePeriod, .inBillingRetryPeriod:
+        case .subscribed, .inGracePeriod:
             isActive = true
-        case .expired, .revoked:
+        case .expired, .revoked, .inBillingRetryPeriod:
             isActive = false
         default: isActive = false
         }
@@ -43,6 +45,7 @@ internal struct RenewalSnapshot: Codable, Equatable {
         case willAutoRenew
         case autoRenewPreference
         case nextRenewalDate
+        case gracePeriodExpirationDate
         case expirationDate
         case ownershipType
     }
@@ -56,6 +59,7 @@ internal struct RenewalSnapshot: Codable, Equatable {
         try container.encode(willAutoRenew, forKey: .willAutoRenew)
         try container.encode(autoRenewPreference, forKey: .autoRenewPreference)
         try container.encode(nextRenewalDate, forKey: .nextRenewalDate)
+        try container.encode(gracePeriodExpirationDate, forKey: .gracePeriodExpirationDate)
         try container.encode(expirationDate, forKey: .expirationDate)
         try container.encode(ownershipType?.rawValue, forKey: .ownershipType)
     }
@@ -70,6 +74,7 @@ internal struct RenewalSnapshot: Codable, Equatable {
         self.isActive = try container.decode(Bool.self, forKey: .isActive)
         self.willAutoRenew = try container.decode(Bool.self, forKey: .willAutoRenew)
         self.nextRenewalDate = try? container.decodeIfPresent(Date.self, forKey: .nextRenewalDate)
+        self.gracePeriodExpirationDate = try? container.decodeIfPresent(Date.self, forKey: .gracePeriodExpirationDate)
         self.expirationDate = try? container.decodeIfPresent(Date.self, forKey: .expirationDate)
         self.autoRenewPreference = try? container.decode(String.self, forKey: .autoRenewPreference)
 
@@ -169,7 +174,7 @@ internal struct ProductSnapshot: Codable, Equatable {
         self.displayName = try container.decode(String.self, forKey: .displayName)
         self.isEligibleForIntroOffer = try container.decode(Bool.self, forKey: .isEligibleForIntroOffer)
         self.isFamilyShareable = try container.decode(Bool.self, forKey: .isFamilyShareable)
-        self.renewalInfo = try container.decode(RenewalSnapshot.self, forKey: .renewalInfo)
+        self.renewalInfo = try? container.decode(RenewalSnapshot.self, forKey: .renewalInfo)
 
 //        let environment: String = try container.decode(String.self, forKey: .environment)
 //        self.environment = AppStore.Environment(rawValue: environment)
@@ -192,7 +197,13 @@ internal struct ProductSnapshot: Codable, Equatable {
             case .consumable, .nonConsumable:
                 return .unlocked
             case .autoRenewable, .nonRenewable:
-                return .active
+                if renewalInfo?.state == .inGracePeriod {
+                    return .gracePeriod
+                } else if renewalInfo?.state == .inBillingRetryPeriod {
+                    return .billingRetryPeriod
+                } else {
+                    return .active
+                }
             default:
                 return .inactive
             }

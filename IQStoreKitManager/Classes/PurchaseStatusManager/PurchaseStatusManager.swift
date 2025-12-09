@@ -41,15 +41,6 @@ public final class PurchaseStatusManager: NSObject {
     @objc public func isActive(productID: String) -> Bool {
          return snapshotStatus[productID]?.isActive == true
     }
-
-    @objc public var isAnyPlanActive: Bool {
-        for snapshot in self.snapshotStatus.values {
-            if snapshot.isActive {
-                return true
-            }
-        }
-        return false
-    }
 }
 
 internal extension PurchaseStatusManager {
@@ -102,10 +93,20 @@ internal extension PurchaseStatusManager {
                     newSnapshots[product.id] = snap
                 }
             }
-
         }
         self.snapshotStatus = newSnapshots
         if newSnapshots != cachedSnapshots {
+//            for pair in newSnapshots {
+//                print(pair.key,
+//                      pair.value.status.displayName,
+//                      "Will Autorenew: \(pair.value.renewalInfo?.willAutoRenew ?? false)",
+//                      "Prefs: \(pair.value.renewalInfo?.autoRenewPreference ?? "-"))",
+//                      "Renewal: \(pair.value.renewalInfo?.nextRenewalDate?.formatted(date: .numeric, time: .standard) ?? "-"))",
+//                      "Expiry: \(pair.value.renewalInfo?.expirationDate?.formatted(date: .numeric, time: .standard) ?? "-")",
+//                      "Grace Expiry: \(pair.value.renewalInfo?.gracePeriodExpirationDate?.formatted(date: .numeric, time: .standard) ?? "-")",
+//                      separator: "\t"
+//                )
+//            }
             await MainActor.run {
                 NotificationCenter.default.post(name: Self.purchaseStatusDidChangedNotification, object: nil)
             }
@@ -133,9 +134,7 @@ internal extension PurchaseStatusManager {
             let lhsVerify = try? StoreKitManager.verify(lhs.transaction)
             let rhsVerify = try? StoreKitManager.verify(rhs.transaction)
 
-            let lDate = lhsVerify?.expirationDate ?? (try? lhs.transaction.payloadValue.expirationDate)
-            let rDate = rhsVerify?.expirationDate ?? (try? rhs.transaction.payloadValue.expirationDate)
-            return (lDate ?? .distantPast) > (rDate ?? .distantPast)
+            return (lhsVerify?.expirationDate ?? .distantPast) > (rhsVerify?.expirationDate ?? .distantPast)
         }
 
         let introEligible = await isEligibleForIntroOffer(for: product)

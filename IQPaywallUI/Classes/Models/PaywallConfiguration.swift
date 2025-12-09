@@ -131,15 +131,21 @@ extension PaywallConfiguration {
     }
 
     public struct ActionButton {
-        public var titleToSubscribe: String
-        public var titleToUnlock: String
+        public var nonRenewTitle: String
+        public var autoRenewTitle: String
+        public var consumableTitle: String
+        public var nonConsumableTitle: String
         public var font: UIFont
 
-        public init(titleToSubscribe: String = "Subscribe",
-                    titleToUnlock: String = "Unlock Now",
+        public init(nonRenewTitle: String = "Subscribe",
+                    autoRenewTitle: String = "Subscribe",
+                    consumableTitle: String = "Buy Now",
+                    nonConsumableTitle: String = "Unlock Now",
                     font: UIFont = .preferredFont(forTextStyle: .body)) {
-            self.titleToSubscribe = titleToSubscribe
-            self.titleToUnlock = titleToUnlock
+            self.nonRenewTitle = nonRenewTitle
+            self.autoRenewTitle = autoRenewTitle
+            self.consumableTitle = consumableTitle
+            self.nonConsumableTitle = nonConsumableTitle
             self.font = font
         }
     }

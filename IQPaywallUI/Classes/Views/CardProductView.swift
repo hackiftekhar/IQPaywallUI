@@ -42,31 +42,19 @@ internal struct CardProductView: View {
                 Text(product.displayPrice)
                     .font(productStyle.priceStyle.font.swiftUIFont)
                     .foregroundColor(priceForegroundColor)
+                    .strikethrough(product.isEligibleForIntroOffer && product.discountedDisplayPrice != nil)
 
-                Group {
-                    switch product.type {
-                    case .consumable:
-                        Text("One Time")
-                    case .nonConsumable:
-                        Text("Lifetime")
-                    case .autoRenewable:
-                        if let period = product.subscription?.subscriptionPeriod {
-                            Text("per " + period.formatted)
-                        } else {
-                            Text("")
-                        }
-                    case .nonRenewable:
-                        if let period = product.subscription?.subscriptionPeriod {
-                            Text("a " + period.formatted)
-                        } else {
-                            Text("")
-                        }
-                    default:
-                        Text("")
-                    }
+                if product.isEligibleForIntroOffer, let discountedDisplayPrice = product.discountedDisplayPrice {
+                    Text(discountedDisplayPrice)
+                        .font(productStyle.priceStyle.font.swiftUIFont)
+                        .foregroundColor(priceForegroundColor)
                 }
-                .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
-                .foregroundColor(subscriptionPeriodColor)
+
+                if let periodDescription = product.subscriptionPeriodDescription {
+                    Text(periodDescription)
+                        .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
+                        .foregroundColor(subscriptionPeriodColor)
+                }
 
                 Text(product.description)
                     .lineLimit(5)

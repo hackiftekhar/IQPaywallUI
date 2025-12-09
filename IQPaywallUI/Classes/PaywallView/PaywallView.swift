@@ -33,12 +33,24 @@ public struct PaywallView: View {
             } else if let subscription = product.subscription {
                 if let introOffer = subscription.introductoryOffer,
                    product.isEligibleForIntroOffer {
-                    return "Start \(introOffer.formatted) Now"
+                    return introOffer.actionTitle
                 } else {
-                    return configuration.actionButton.titleToSubscribe
+                    return configuration.actionButton.autoRenewTitle
                 }
             } else {
-                return configuration.actionButton.titleToUnlock
+                switch product.type {
+                case .autoRenewable:
+                    return configuration.actionButton.autoRenewTitle
+                case .nonRenewable:
+                    return configuration.actionButton.nonRenewTitle
+                case .consumable:
+                    let total = product.price * Decimal(viewModel.consumableQuantity)
+                    return configuration.actionButton.consumableTitle + " (\(total.formatted(product.priceFormatStyle)))"
+                case .nonConsumable:
+                    fallthrough
+                default:
+                    return configuration.actionButton.nonConsumableTitle
+                }
             }
         } else {
             return "Choose your plan"
@@ -106,15 +118,21 @@ public struct PaywallView: View {
                         }
 
                         // Products
-                        if !viewModel.isProductLoading {
-                            if let error = viewModel.productLoadingError {
-                                Text(error.localizedDescription)
-                            } else if viewModel.products.isEmpty {
-                                Text("No Products to show")
-                            }
+                        if !viewModel.isProductLoading, viewModel.productLoadingErrorAlert.isShow {
+                            Text(viewModel.productLoadingErrorAlert.title)
+                                .font(configuration.actionButton.font.withSize(20).swiftUIFont.weight(.bold))
+                            Text(viewModel.productLoadingErrorAlert.message)
+                                .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.regular))
                         }
 
-                        if let currentPlan = viewModel.currentPlan {
+                        if let selectedProductId = viewModel.selectedProductId,
+                            let product = viewModel.products.first(where: { $0.id == selectedProductId }),
+                           product.type == .consumable {
+                            Stepper("Quantity: \(viewModel.consumableQuantity)", value: $viewModel.consumableQuantity, in: 1...Int.max)
+                                .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
+                        }
+
+                        if let currentPlan = viewModel.products.first(where: { $0.status == .active })?.snapshot {
                             VStack(spacing: 0) {
                                 switch currentPlan.type {
                                 case .consumable, .nonConsumable:
@@ -191,7 +209,7 @@ public struct PaywallView: View {
                     .padding()
                 }
                 .safeAreaInset(edge: .bottom) {
-                    Color.clear.frame(height: 100)   // bottom content inset
+                    Color.clear.frame(height: 200)   // bottom content inset
                 }
 
                 VStack {
@@ -204,7 +222,7 @@ public struct PaywallView: View {
                            let introOffer = subscription.introductoryOffer,
                            product.isEligibleForIntroOffer {
                             VStack {
-                                Text(introOffer.formatted)
+                                Text(introOffer.localizedDescription)
                                     .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.regular))
                                 Text("No commitment. Cancel anytime.")
                                     .font(configuration.actionButton.font.withSize(12).swiftUIFont.weight(.light))
@@ -225,19 +243,14 @@ public struct PaywallView: View {
                     .padding()
                     .background(.ultraThinMaterial)
                     //                        .colorScheme(.light)
-                    .alert("Error!", isPresented: $viewModel.isProductPurchasingError, actions: {
-                        Button("OK", action: {})
+                    .alert(viewModel.productPurchaseResultAlert.title, isPresented: $viewModel.productPurchaseResultAlert.isShow, actions: {
+                        Button(viewModel.productPurchaseResultAlert.buttonTitle, action: {})
                     }, message: {
-                        Text(viewModel.productPurchaseError?.localizedDescription ?? "")
+                        Text(viewModel.productPurchaseResultAlert.message)
                     })
                 }
             }
             .manageSubscriptionsSheet(isPresented: $showManageSubscription)
-            .alert("Error!", isPresented: $viewModel.isProductLoadingError, actions: {
-                Button("OK", action: crossAction)
-            }, message: {
-                Text(viewModel.productLoadingError?.localizedDescription ?? "")
-            })
             .onAppear {
                 Task {
                     await fetchProducts()
@@ -270,8 +283,7 @@ public struct PaywallView: View {
             if newValue == false {
                 //User dismissed the manage subscription screen, let's see if user has changed something or not
                 Task {
-                    // Refresh list
-                    await fetchProducts()
+                    await StoreKitManager.shared.refreshStatuses()
                 }
             }
         })
@@ -306,7 +318,6 @@ public struct PaywallView: View {
         } else if let product = StoreKitManager.shared.product(withID: selectedProductId) {
             Task {
                 await viewModel.purchase(product: product)
-                await fetchProducts()
             }
         }
     }
@@ -321,7 +332,6 @@ public struct PaywallView: View {
 
         Task {
             await viewModel.restorePurchases()
-            await fetchProducts()
         }
     }
 
@@ -356,7 +366,7 @@ extension PaywallView {
 
     func productCardListView(productStyle: PaywallConfiguration.Product) -> some View {
         HStack(spacing: 16) {
-            let products: [ProductInfo] = viewModel.products.isEmpty ? ProductInfo.placeholders : viewModel.products
+            let products: [ProductInfo] = (viewModel.products.isEmpty && viewModel.isProductLoading) ? Array(ProductInfo.placeholders.prefix(configuration.productIds.count)) : viewModel.products
             ForEach(products, id: \.self) { product in
                 CardProductView(product: product,
                                 productStyle: productStyle,
@@ -372,7 +382,7 @@ extension PaywallView {
 
     func productTableListView(productStyle: PaywallConfiguration.Product) -> some View {
         VStack {
-            let products: [ProductInfo] = viewModel.products.isEmpty ? ProductInfo.placeholders : viewModel.products
+            let products: [ProductInfo] = (viewModel.products.isEmpty && viewModel.isProductLoading) ? Array(ProductInfo.placeholders.prefix(configuration.productIds.count)) : viewModel.products
             ForEach(products, id: \.self) { product in
                 ListProductView(product: product,
                                 productStyle: productStyle,

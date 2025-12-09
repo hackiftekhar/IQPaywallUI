@@ -5,11 +5,34 @@ import SwiftUI
 import StoreKit
 import IQStoreKitManager
 
+public struct AlertModel {
+    public var isShow: Bool = false
+    private(set) var title: String = ""
+    private(set) var message: String = ""
+    private(set) var buttonTitle: String = ""
+    init() {
+    }
+
+    mutating public func show(title: String, message: String, buttonTitle: String = "OK") {
+        self.title = title
+        self.message = message
+        self.buttonTitle = buttonTitle
+        isShow = true
+    }
+    mutating public func hide() {
+        isShow = false
+        title = ""
+        message = ""
+        buttonTitle = ""
+    }
+}
+
 @MainActor
 public final class PaywallViewModel: ObservableObject {
 
     private let storeKitManager = StoreKitManager.shared
     private let purchaseStatusManager = PurchaseStatusManager.shared
+    @Published var consumableQuantity: Int = 1
 
     @MainActor
     @Published @objc public var selectedProductId: String?
@@ -18,23 +41,14 @@ public final class PaywallViewModel: ObservableObject {
     @Published public var products: [ProductInfo] = []
 
     @MainActor
-    @Published @objc public var isProductLoading: Bool = false
+    @Published @objc var isProductLoading: Bool = false
+    @MainActor
+    @Published public var productLoadingErrorAlert: AlertModel = .init()
 
     @MainActor
-    @Published @objc public var isProductLoadingError: Bool = false
-
+    @Published public var isProductPurchasing: Bool = false
     @MainActor
-    @Published @objc public var productLoadingError: Error? = nil
-
-    @MainActor
-    @Published @objc public var isProductPurchasing: Bool = false
-
-    @MainActor
-    @Published @objc public var isProductPurchasingError: Bool = false
-
-    @MainActor
-    @Published @objc public var productPurchaseError: Error? = nil
-
+    @Published public var productPurchaseResultAlert: AlertModel = .init()
 
     let formatter: DateFormatter
 
@@ -43,26 +57,24 @@ public final class PaywallViewModel: ObservableObject {
         formatter.dateFormat = DateFormatter.dateFormat(fromTemplate: "ddMMyyyyHHmma",
                                                         options: 0,
                                                         locale: Locale.current)
-    }
 
-    var currentPlan: ProductStatus? {
-        // First select the selected product if active
-        if let selectedProductId = selectedProductId,
-           let snapshot = purchaseStatusManager.snapshot(for: selectedProductId),
-           snapshot.isActive {
-            return snapshot
-        }
+        NotificationCenter.default.addObserver(forName: PurchaseStatusManager.purchaseStatusDidChangedNotification, object: nil, queue: nil) { _ in
 
-        // Then select the first from the first active product in the list
-        for product in products {
-            if let snapshot = purchaseStatusManager.snapshot(for: product.id),
-               snapshot.isActive {
-                return snapshot
+            DispatchQueue.main.async {
+                self.updateProductStatuses()
             }
         }
+    }
 
-        // Finally return the currently active plan saved in the manager
-        return purchaseStatusManager.activePlans.first
+
+    private func updateProductStatuses() {
+        // Update product statuses
+        let products = self.products.map { productInfo in
+            var updatedProductInfo = productInfo
+            updatedProductInfo.updateSnapshot(purchaseStatusManager.snapshot(for: productInfo.id))
+            return updatedProductInfo
+        }
+        self.products = products
     }
 
     func fetchProducts(productIds: [String]) async {
@@ -79,41 +91,40 @@ public final class PaywallViewModel: ObservableObject {
         }
 
         isProductLoading = true
-        productLoadingError = nil
-        isProductLoadingError = false
+        productLoadingErrorAlert.hide()
 
         let products = await storeKitManager.loadProducts(productIDs: productIds)
-
-        if products.isEmpty {
-            productLoadingError = NSError(domain: "\(Self.self)", code: 0, userInfo: [NSLocalizedDescriptionKey: "No products to show"])
-            isProductLoadingError = true
+        if !products.isEmpty {
+            self.products = products.map({ .init(product: $0, snapshot: purchaseStatusManager.snapshot(for: $0.id)) })
         }
 
-        self.products = products.map({ .init(product: $0, snapshot: purchaseStatusManager.snapshot(for: $0.id)) })
+        if self.products.isEmpty {
+            productLoadingErrorAlert.show(title: "Error", message: "No products to show")
+        }
+
         isProductLoading = false
     }
 
     func purchase(product: Product) async {
 
         isProductPurchasing = true
-        isProductPurchasingError = false
-        productPurchaseError = nil
+        productPurchaseResultAlert.hide()
 
-        let result = await storeKitManager.purchase(product: product)
+        let finalQuantity: Int? = product.type == .consumable ? consumableQuantity : nil
+        let result = await storeKitManager.purchase(product: product, quantity: finalQuantity)
 
         switch result {
         case .success, .restored:
             HapticGenerator.shared.success()
+            productPurchaseResultAlert.show(title: "Success", message: "Purchase completed successfully!")
         case .pending:
             HapticGenerator.shared.warning()
-            productPurchaseError = NSError(domain: "\(Self.self)", code: -1, userInfo: [NSLocalizedDescriptionKey: "Purchase is Pending to be Completed!"])
-            isProductPurchasingError = true
+            productPurchaseResultAlert.show(title: "Purchase Pending", message: "Purchase is Pending to be Completed. You may need to take additional steps to complete the purchase.")
         case .userCancelled:
             break
         case .failure(let error):
             HapticGenerator.shared.error()
-            productPurchaseError = error
-            isProductPurchasingError = true
+            productPurchaseResultAlert.show(title: "Purchase Failed", message: error.localizedDescription)
         }
 
         isProductPurchasing = false
@@ -122,24 +133,22 @@ public final class PaywallViewModel: ObservableObject {
     func restorePurchases() async {
 
         isProductPurchasing = true
-        isProductPurchasingError = false
-        productPurchaseError = nil
+        productPurchaseResultAlert.hide()
 
         let result = await storeKitManager.restorePurchases()
 
         switch result {
         case .success, .restored:
             HapticGenerator.shared.success()
+            productPurchaseResultAlert.show(title: "Restored", message: "Purchase Restored completed successfully!")
         case .pending:
             HapticGenerator.shared.warning()
-            productPurchaseError = NSError(domain: "\(Self.self)", code: -1, userInfo: [NSLocalizedDescriptionKey: "Purchase is Pending to be Completed!"])
-            isProductPurchasingError = true
+            productPurchaseResultAlert.show(title: "Purchase Restored Pending", message: "Purchase is Pending to be Completed. You may need to take additional steps to complete the purchase.")
         case .userCancelled:
             break
         case .failure(let error):
             HapticGenerator.shared.error()
-            productPurchaseError = error
-            isProductPurchasingError = true
+            productPurchaseResultAlert.show(title: "Purchase Restoration Failed", message: error.localizedDescription)
         }
 
         isProductPurchasing = false

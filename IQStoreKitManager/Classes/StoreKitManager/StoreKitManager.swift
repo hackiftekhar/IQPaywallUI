@@ -64,7 +64,7 @@ public final class StoreKitManager: NSObject, ObservableObject {
         Task {
             let products = await loadProducts(productIDs: productIDs)
             self.products = products
-            self.renewRefreshTimers()
+            await refreshStatuses()
             beginObservingTransactions()
             addForegroundObserver()
         }
@@ -83,8 +83,8 @@ public final class StoreKitManager: NSObject, ObservableObject {
         }
     }
 
-
     public func refreshStatuses() async {
+//        _ = try? await receiptFetcher.refreshReceipt()
         await self.purchaseStatusManager.refreshStatuses(self.products)
         self.renewRefreshTimers()
     }
@@ -97,7 +97,6 @@ public final class StoreKitManager: NSObject, ObservableObject {
         let products: [Product]
         do {
             products = try await loadProducts(for: productIDs)
-            await purchaseStatusManager.refreshStatuses(products)
         } catch {
             products = self.products.filter({ productIDs.contains($0.id) })
         }
@@ -114,7 +113,7 @@ public final class StoreKitManager: NSObject, ObservableObject {
 extension StoreKitManager {
 
     /// Purchase a product
-    public func purchase(product: Product, offer: Product.SubscriptionOffer? = nil) async -> PurchaseState {
+    public func purchase(product: Product, offer: Product.SubscriptionOffer? = nil, quantity: Int? = nil) async -> PurchaseState {
 
         let finalResult: PurchaseState
 
@@ -123,6 +122,10 @@ extension StoreKitManager {
             let appAccountToken: UUID? = appAccountToken
             if let appAccountToken = appAccountToken {
                 options.insert(.appAccountToken(appAccountToken))
+            }
+
+            if let quantity = quantity {
+                options.insert(.quantity(quantity))
             }
 
             if let offer = offer, let offerId = offer.id {
@@ -360,18 +363,31 @@ extension StoreKitManager {
         refreshTimer?.invalidate()
         refreshTimer = nil
 
-        let allSnapshots: [ProductStatus] = self.products.compactMap { PurchaseStatusManager.shared.snapshot(for: $0.id) }
-        let expiryDates: [Date] = allSnapshots.compactMap { $0.renewalInfo?.nextRenewalDate ?? $0.renewalInfo?.expirationDate }.sorted()
-        guard let closestExpiryDate = expiryDates.first else {
+        let allActiveSnapshots: [ProductStatus] = self.products.compactMap {
+            guard let snapshot = PurchaseStatusManager.shared.snapshot(for: $0.id), snapshot.status != .inactive else {
+                return nil
+            }
+            return snapshot
+        }
+        var expiryDates: [Date] = allActiveSnapshots.compactMap { $0.renewalInfo?.nextRenewalDate }
+        expiryDates += allActiveSnapshots.compactMap { $0.renewalInfo?.gracePeriodExpirationDate }
+        expiryDates += allActiveSnapshots.compactMap { $0.renewalInfo?.expirationDate }
+        expiryDates.sort()
+        let futureExpiryDates = expiryDates.filter { $0 > Date() }
+        guard let closestExpiryDate = futureExpiryDates.first else {
             return
         }
 
-        let timer = Timer(fire: closestExpiryDate, interval: 3600, repeats: false) { _ in
+        let extendedExpireDate = closestExpiryDate.addingTimeInterval(60)
+//        print("Timer will fire at: \(extendedExpireDate.formatted(date: .numeric, time: .standard))")
+        // Delaying 10 seconds
+        let timer = Timer(fire: extendedExpireDate, interval: 3600, repeats: false) { _ in
             Task {
                 await self.refreshStatuses()
             }
         }
-        RunLoop.current.add(timer, forMode: .common)
+        timer.tolerance = 1
+        RunLoop.main.add(timer, forMode: .common)
         refreshTimer = timer
     }
 }

@@ -62,46 +62,27 @@ internal struct ListProductView: View {
                         let introOffer = subscription.introductoryOffer,
                        product.isEligibleForIntroOffer {
                         VStack(alignment: .leading) {
-                            Text(introOffer.formatted)
+                            Text(introOffer.localizedDescription)
                                 .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
                                 .foregroundColor(subscriptionPeriodColor)
-    //                        Text("No commitment. Cancel anytime.")
-    //                            .font(Font(productStyle.subscriptionPeriodStyle.font))
-    //                            .foregroundStyle(Color(productStyle.subscriptionPeriodStyle.color))
-                        }
-                    }
-                }
-
-                Spacer()
 
                 VStack(alignment: .trailing) {
                     Text(product.displayPrice)
                         .font(productStyle.priceStyle.font.swiftUIFont)
                         .foregroundColor(priceForegroundColor)
-                    Group {
-                        switch product.type {
-                        case .consumable:
-                            Text("One Time")
-                        case .nonConsumable:
-                            Text("Lifetime")
-                        case .autoRenewable:
-                            if let period = product.subscription?.subscriptionPeriod {
-                                Text("per " + period.formatted)
-                            } else {
-                                Text("")
-                            }
-                        case .nonRenewable:
-                            if let period = product.subscription?.subscriptionPeriod {
-                                Text("a " + period.formatted)
-                            } else {
-                                Text("")
-                            }
-                        default:
-                            Text("")
-                        }
+                        .strikethrough(product.isEligibleForIntroOffer && product.discountedDisplayPrice != nil)
+
+                    if product.isEligibleForIntroOffer, let discountedDisplayPrice = product.discountedDisplayPrice {
+                        Text(discountedDisplayPrice)
+                            .font(productStyle.priceStyle.font.swiftUIFont)
+                            .foregroundColor(priceForegroundColor)
                     }
-                    .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
-                    .foregroundColor(subscriptionPeriodColor)
+
+                    if let periodDescription = product.subscriptionPeriodDescription {
+                        Text(periodDescription)
+                            .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
+                            .foregroundColor(subscriptionPeriodColor)
+                    }
                 }
             }
         }

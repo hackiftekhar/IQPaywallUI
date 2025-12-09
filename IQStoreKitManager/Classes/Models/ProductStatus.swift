@@ -6,6 +6,8 @@ import StoreKit
 @objc public enum ActiveStatus: Int {
     case inactive
     case active
+    case gracePeriod
+    case billingRetryPeriod
     case upcoming
     case unlocked
 
@@ -13,6 +15,8 @@ import StoreKit
         switch self {
         case .inactive:  return "Inactive"
         case .active:    return "Active"
+        case .gracePeriod:    return "Grace Period"
+        case .billingRetryPeriod:    return "Billing Retry Period"
         case .upcoming:  return "Upcoming"
         case .unlocked:  return "Unlocked"
         }
@@ -50,6 +54,7 @@ import StoreKit
     @objc public var autoRenewPreference: String? { snapshot.autoRenewPreference }
     @objc public var nextRenewalDate: Date? { snapshot.nextRenewalDate }
     @objc public var expirationDate: Date? { snapshot.expirationDate }
+    @objc public var gracePeriodExpirationDate: Date? { snapshot.gracePeriodExpirationDate }
     @objc public var isActive: Bool { snapshot.isActive }
 
     init(from snapshot: RenewalSnapshot) {

@@ -12,8 +12,10 @@ internal final class AppReceiptFetcher: NSObject, SKRequestDelegate {
 
     private var continuations: [NSObject:CheckedContinuation<Void, Error>] = [:]
 
-    func fetchBase64Receipt(forceRefresh: Bool = false) async throws -> Data {
-        if let base64 = readBase64Receipt(), !forceRefresh {
+    private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+
+    func fetchBase64Receipt() async throws -> Data {
+        if let base64 = readBase64Receipt() {
             return base64
         }
         try await refreshReceipt()
@@ -31,7 +33,10 @@ internal final class AppReceiptFetcher: NSObject, SKRequestDelegate {
         return data
     }
 
-    private func refreshReceipt() async throws {
+    func refreshReceipt() async throws {
+
+        startBackgroundTask()
+
         let request = SKReceiptRefreshRequest()
         request.delegate = self
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -45,10 +50,29 @@ internal final class AppReceiptFetcher: NSObject, SKRequestDelegate {
     func requestDidFinish(_ request: SKRequest) {
         self.continuations[request]?.resume(returning: ())
         self.continuations[request] = nil
+        endBackgroundTask()
     }
 
     func request(_ request: SKRequest, didFailWithError error: Error) {
         self.continuations[request]?.resume(throwing: ReceiptError.refreshFailed(error.localizedDescription))
         self.continuations[request] = nil
+        endBackgroundTask()
+    }
+
+    private func startBackgroundTask() {
+        // 2. BEGIN the Background Task
+        self.backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "SKReceiptRefresh") {
+            // Expiration Handler: This is called if the time runs out before the task finishes.
+            // You should try to end the task here and clean up.
+            self.endBackgroundTask()
+            // Optionally, handle the timeout error here if necessary.
+        }
+    }
+
+    private func endBackgroundTask() {
+        if self.backgroundTaskID != .invalid {
+            UIApplication.shared.endBackgroundTask(self.backgroundTaskID)
+            self.backgroundTaskID = .invalid
+        }
     }
 }
