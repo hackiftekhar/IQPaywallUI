@@ -68,10 +68,9 @@ public struct ProductInfo: Identifiable, Hashable {
         switch offer.paymentMode {
         case .freeTrial:
             return"\(offer.period.localizedDescription) Free"
-        case .payAsYouGo:
-            return offer.displayPrice
-        case .payUpFront:
-
+        case .payAsYouGo, .payUpFront:
+            fallthrough
+        default:
             let originalDays = subscription.subscriptionPeriod.days
             let upfrontDays = offer.period.days * offer.periodCount
 
@@ -80,8 +79,8 @@ public struct ProductInfo: Identifiable, Hashable {
             let offerPrice = offer.price * Decimal(ratio)
 
             return offerPrice.formatted(priceFormatStyle)
-        default:
-            return displayPrice
+//        default:
+//            return displayPrice
         }
     }
 

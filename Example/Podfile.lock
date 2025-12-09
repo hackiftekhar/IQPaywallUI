@@ -20,7 +20,7 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  IQPaywallUI: 9ce1ac076f6206cd82bfee6aa0621db7e1900c37
+  IQPaywallUI: 76108cff60b6eeb4cd52964241d277599ca88189
   IQStoreKitManager: 4c9825c53c7a4c2611e6f9367a66820d0bf5a3ec
   SwiftLint: f84fc7d844e9cde0dc4f5013af608a269e317aba
 

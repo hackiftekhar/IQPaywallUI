@@ -50,22 +50,24 @@ internal struct ListProductView: View {
                         }
                         Spacer()
                     }
-
-                     Text(product.description)
+                    
+                    Text(product.description)
                         .multilineTextAlignment(.leading)
                         .font(productStyle.descriptionStyle.font.swiftUIFont)
                         .foregroundColor(descriptionColor)
                         .truncationMode(.tail)
-
+                    
                     if !product.isActive,
                        let subscription = product.subscription,
-                        let introOffer = subscription.introductoryOffer,
+                       let introOffer = subscription.introductoryOffer,
                        product.isEligibleForIntroOffer {
                         VStack(alignment: .leading) {
                             Text(introOffer.localizedDescription)
                                 .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
                                 .foregroundColor(subscriptionPeriodColor)
-
+                        }
+                    }
+                }
                 VStack(alignment: .trailing) {
                     Text(product.displayPrice)
                         .font(productStyle.priceStyle.font.swiftUIFont)
