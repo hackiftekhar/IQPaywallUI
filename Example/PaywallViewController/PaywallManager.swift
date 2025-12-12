@@ -222,7 +222,7 @@ extension PaywallManager {
                                                      icon: .init(UIImage(systemName: "checkmark.circle.fill")!, color: foregroundColor),
                                                      style: .init(font: regular15, color: foregroundColor))))
 
-        configuration.elements.append(.product(.init(style: .list,
+        configuration.elements.append(.product(.init(style: .card,
                                                      nameStyle: .init(font: semibold20, color: foregroundColor),
                                                      priceStyle: .init(font: semibold20, color: foregroundColor),
                                                      subscriptionPeriodStyle: .init(font: light12, color: foregroundColor),
