@@ -15,6 +15,7 @@ public struct PaywallConfiguration {
     public var linkStyle: LabelStyle
     public var terms: Link?
     public var privacyPolicy: Link?
+    public var canRedeemOfferCode: Bool
 
     public init(productIds: [String] = [],
                 recommendedProductId: String? = nil,
@@ -22,7 +23,8 @@ public struct PaywallConfiguration {
                 actionButton: ActionButton = .init(),
                 backgroundColor: UIColor = UIColor.systemBackground,
                 foregroundColor: UIColor = UIColor.systemBlue,
-                linkStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote))) {
+                linkStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote)),
+                canRedeemOfferCode: Bool = false) {
         self.productIds = productIds
         self.recommendedProductId = recommendedProductId
         self.elements = elements
@@ -30,6 +32,7 @@ public struct PaywallConfiguration {
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
         self.linkStyle = linkStyle
+        self.canRedeemOfferCode = canRedeemOfferCode
     }
 }
 

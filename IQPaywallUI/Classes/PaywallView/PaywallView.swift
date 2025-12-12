@@ -11,6 +11,7 @@ public struct PaywallView: View {
     @StateObject private var viewModel: PaywallViewModel = .init()
 
     @State private var showManageSubscription: Bool = false
+    @State private var showOfferCode: Bool = false
     @State private var showTermsAndConditions: Bool = false
     @State private var showPrivacyPolicy: Bool = false
 
@@ -183,6 +184,17 @@ public struct PaywallView: View {
                         .frame(maxWidth: .infinity)
                         .padding(5)
 
+                        if configuration.canRedeemOfferCode {
+                            Button(action: { showOfferCode = true }) {
+                                Text("Redeem Offer Code")
+                                    .font(configuration.linkStyle.font.swiftUIFont)
+                                    .foregroundStyle(configuration.linkStyle.color?.swiftUIColor ?? Color.blue)
+                            }
+                            .disabled(viewModel.isProductPurchasing)
+                            .frame(maxWidth: .infinity)
+                            .padding(5)
+                        }
+
                         HStack {
                             if let terms = configuration.terms {
                                 Button(action: termsAndConditionAction) {
@@ -251,6 +263,9 @@ public struct PaywallView: View {
                 }
             }
             .manageSubscriptionsSheet(isPresented: $showManageSubscription)
+            .offerCodeRedemptionCompatibility(isPresented: $showOfferCode, onCompletion: { result in
+                handleOfferCodeResult(result: result)
+            })
             .onAppear {
                 Task {
                     await fetchProducts()
@@ -348,6 +363,19 @@ public struct PaywallView: View {
     private func crossAction() {
         HapticGenerator.shared.softImpact()
         dismiss()
+    }
+
+    private func handleOfferCodeResult(result: Result<Void, Error>) {
+        switch result {
+        case .success:
+            Task {
+                await StoreKitManager.shared.refreshStatuses()
+            }
+            HapticGenerator.shared.success()
+        case .failure:
+            break
+//            HapticGenerator.shared.error()
+        }
     }
 }
 
