@@ -39,26 +39,35 @@ final class PaywallManager: NSObject {
         super.init()
     }
 
+    @objc
+    func configure() {
+        IQPaywallUI.configure(productIds: ProductIdentifier.allCases.map({ $0.rawValue }), delegate: self)
+    }
+
+    func paywallView() -> some View {
+        PaywallView(configuration: configuration)
+    }
+
     // MARK: - App purchase activation check
-        @objc
-        var isSubscribed: Bool {
-    #if targetEnvironment(simulator)
-            return true
-    #else
-            for plan in ProductIdentifier.allCases {
-                if let status = PurchaseStatusManager.shared.snapshot(for: plan.rawValue),
-                   status.isActive {
-                    return true
-                }
+    @objc
+    var isSubscribed: Bool {
+#if targetEnvironment(simulator)
+        return true
+#else
+        for plan in ProductIdentifier.allCases {
+            if let status = PurchaseStatusManager.shared.snapshot(for: plan.rawValue),
+               status.isActive {
+                return true
             }
-            return false
-    #endif
         }
-    
-        @objc
-        var currentlyActivePlan: ProductStatus? {
-            return PurchaseStatusManager.shared.activePlans.first
-        }
+        return false
+#endif
+    }
+
+    @objc
+    var currentlyActivePlan: ProductStatus? {
+        return PurchaseStatusManager.shared.activePlans.first
+    }
 
 
     func isActive(_ identifier: ProductIdentifier) -> Bool {
@@ -110,11 +119,11 @@ extension PaywallManager {
     }
 
     func purchaseCoins(from controller: UIViewController) {
-        self.present(from: controller, productIdentifiers: [.coins])
+        self.present(from: controller, productIdentifiers: [.coins], recommended: .coins)
     }
 
     var hasClaimedToday: Bool {
-        var claimedDates = self.claimedDates
+        let claimedDates = self.claimedDates
         let claimDateString: String = Self.dateFormatter.string(from: Date())
         return claimedDates[claimDateString] ?? false
     }
@@ -157,40 +166,30 @@ extension PaywallManager {
 extension PaywallManager {
 
     func unlockPro(from controller: UIViewController) {
-        self.present(from: controller, productIdentifiers: [.pro])
+        self.present(from: controller, productIdentifiers: [.pro], recommended: .pro)
     }
 
     func unlockNatureSound(from controller: UIViewController) {
-        self.present(from: controller, productIdentifiers: [.nature_sound_pack])
+        self.present(from: controller, productIdentifiers: [.nature_sound_pack], recommended: .nature_sound_pack)
     }
 
     func subscription(from controller: UIViewController) {
-        self.present(from: controller, productIdentifiers: [.weekly, .monthly, .yearly])
+        self.present(from: controller, productIdentifiers: [.weekly, .monthly, .yearly], recommended: .monthly)
     }
 
     func subscribeTutorialPlus(from controller: UIViewController) {
-        self.present(from: controller, productIdentifiers: [.meditation_tutor])
+        self.present(from: controller, productIdentifiers: [.meditation_tutor], recommended: .meditation_tutor)
     }
-
 }
 
-extension PaywallManager {
-
-    @objc
-    func configure() {
-        IQPaywallUI.configure(productIds: ProductIdentifier.allCases.map({ $0.rawValue }), delegate: self)
-    }
-
-    func paywallView() -> some View {
-        PaywallView(configuration: configuration)
-    }
+private extension PaywallManager {
 
     // MARK: - Present Paywall
-    func present(from controller: UIViewController, productIdentifiers: [ProductIdentifier]) {
+    func present(from controller: UIViewController, productIdentifiers: [ProductIdentifier], recommended: ProductIdentifier?) {
 
         var configuration = self.configuration
         configuration.productIds = productIdentifiers.map({ $0.rawValue })
-        configuration.recommendedProductId = productIdentifiers.first?.rawValue
+        configuration.recommendedProductId = recommended?.rawValue
 
         let hostingController = UIHostingController(rootView: PaywallView(configuration: configuration))
         hostingController.modalPresentationStyle = .fullScreen
@@ -270,12 +269,12 @@ extension PaywallManager {
 }
 
 extension PaywallManager: StoreKitManagerDelegate {
-    func generateSignature(product: Product, offerID: String, appAccountToken: UUID?, completion: @escaping (Result<IQStoreKitManager.OfferSignature, any Error>) -> Void) {
+    func generateSignature(product: StoreKit.Product, offerID: String, appAccountToken: UUID?, completion: @escaping (Result<IQStoreKitManager.OfferSignature, any Error>) -> Void) {
     }
 
-    func deliver(product: Product,
+    func deliver(product: StoreKit.Product,
                  transaction: StoreKit.Transaction,
-                 renewalInfo: Product.SubscriptionInfo.RenewalInfo?,
+                 renewalInfo: StoreKit.Product.SubscriptionInfo.RenewalInfo?,
                  receiptData: Data,
                  appAccountToken: UUID?,
                  completion: @escaping (Result<Void, any Error>) -> Void) {
