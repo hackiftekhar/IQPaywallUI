@@ -66,7 +66,7 @@ internal struct RenewalSnapshot: Codable, Equatable {
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(String.self, forKey: .autoRenewPreference)
+        self.id = try container.decode(String.self, forKey: .id)
         let type: String = try container.decode(String.self, forKey: .type)
         self.type = .init(rawValue: type)
         let state: Int = try container.decode(Int.self, forKey: .state)

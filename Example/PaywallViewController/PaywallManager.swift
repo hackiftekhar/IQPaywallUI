@@ -118,10 +118,6 @@ extension PaywallManager {
         }
     }
 
-    func purchaseCoins(from controller: UIViewController) {
-        self.present(from: controller, productIdentifiers: [.coins], recommended: .coins)
-    }
-
     var hasClaimedToday: Bool {
         let claimedDates = self.claimedDates
         let claimDateString: String = Self.dateFormatter.string(from: Date())
@@ -164,6 +160,10 @@ extension PaywallManager {
 }
 
 extension PaywallManager {
+
+    func purchaseCoins(from controller: UIViewController) {
+        self.present(from: controller, productIdentifiers: [.coins], recommended: .coins)
+    }
 
     func unlockPro(from controller: UIViewController) {
         self.present(from: controller, productIdentifiers: [.pro], recommended: .pro)
@@ -281,10 +281,9 @@ extension PaywallManager: StoreKitManagerDelegate {
 
         if product.id == ProductIdentifier.coins.rawValue {
             // Deliver coins
-            let currentCoins = self.coins
             let coinPerQuantity: Int = 50
             let purchasedCoins = coinPerQuantity * transaction.purchasedQuantity
-            self.coins = purchasedCoins
+            self.coins += purchasedCoins
             completion(.success(()))
             return
         } else {
