@@ -4,7 +4,7 @@ platform :ios, '15.0'
 
 target 'PaywallViewController' do
   pod 'IQPaywallUI', :path => '../'
-  pod 'IQStoreKitManager', :path => '../'
+  pod 'IQPurchaseKit', :path => '../../IQPurchaseKit'
 
   pod "SwiftLint"
 end

@@ -4,21 +4,21 @@
 import Foundation
 import Security
 import CryptoKit
-import IQStoreKitManager
+import IQPurchaseKit
 
 @objc
 public class IQPaywallUI: NSObject {
 
     @objc public static func setAppAccountToken(_ token: UUID?) {
-        StoreKitManager.shared.setAppAccountToken(token)
+        IQPurchaseKit.shared.setAppAccountToken(token)
     }
 
     @objc public static func configure(productIds: [String]) {
-        StoreKitManager.shared.configure(productIDs: productIds)
+        IQPurchaseKit.shared.configure(productIDs: productIds)
     }
 
-    public static func configure(productIds: [String], delegate: StoreKitManagerDelegate?) {
-        StoreKitManager.shared.configure(productIDs: productIds, delegate: delegate)
+    public static func configure(productIds: [String], delegate: IQPurchaseKitDelegate?) {
+        IQPurchaseKit.shared.configure(productIDs: productIds, delegate: delegate)
     }
 
     // MARK: - AppAccount token generation from Int type of user id

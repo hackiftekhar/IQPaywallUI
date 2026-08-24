@@ -1,12 +1,12 @@
 PODS:
-  - IQPaywallUI (0.0.1):
-    - IQStoreKitManager
-  - IQStoreKitManager (0.0.1)
+  - IQPaywallUI (1.0.0):
+    - IQPurchaseKit
+  - IQPurchaseKit (1.0.0)
   - SwiftLint (0.62.2)
 
 DEPENDENCIES:
   - IQPaywallUI (from `../`)
-  - IQStoreKitManager (from `../`)
+  - IQPurchaseKit (from `../../IQPurchaseKit`)
   - SwiftLint
 
 SPEC REPOS:
@@ -16,14 +16,14 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   IQPaywallUI:
     :path: "../"
-  IQStoreKitManager:
-    :path: "../"
+  IQPurchaseKit:
+    :path: "../../IQPurchaseKit"
 
 SPEC CHECKSUMS:
-  IQPaywallUI: 76108cff60b6eeb4cd52964241d277599ca88189
-  IQStoreKitManager: 4c9825c53c7a4c2611e6f9367a66820d0bf5a3ec
+  IQPaywallUI: 9ecd5b6f8d619b5481096b1c0f4ce11ad9e0a598
+  IQPurchaseKit: 4d66ea0b2686aba1ed7801b6aee19506d8c00b5f
   SwiftLint: f84fc7d844e9cde0dc4f5013af608a269e317aba
 
-PODFILE CHECKSUM: 24fa1d3ab2b0cd8e1ce41c48084172a022626c1c
+PODFILE CHECKSUM: 762cc431b6227efc5740a1b28b538170b86f218a
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

@@ -3,12 +3,16 @@
 
 import SwiftUI
 import StoreKit
-import IQStoreKitManager
+import IQPurchaseKit
 
 public struct PaywallView: View {
 
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: PaywallViewModel = .init()
+    @State private var selectedProductId: String?
+    @State private var consumableQuantity: Int = 1
+    @State private var productLoadingErrorAlert: AlertModel = .init()
+    @State private var productPurchaseResultAlert: AlertModel = .init()
 
     @State private var showManageSubscription: Bool = false
     @State private var showOfferCode: Bool = false
@@ -27,7 +31,7 @@ public struct PaywallView: View {
             return "Please wait..."
         } else if viewModel.products.isEmpty && viewModel.isProductLoading {
             return "Loading..."
-        } else if let selectedProductId = viewModel.selectedProductId,
+        } else if let selectedProductId = selectedProductId,
                   let product = viewModel.products.first(where: { $0.id == selectedProductId }) {
             if product.status != .inactive {
                 return product.subscription != nil ? "Manage Subscription" : "Unlocked"
@@ -45,7 +49,7 @@ public struct PaywallView: View {
                 case .nonRenewable:
                     return configuration.actionButton.nonRenewTitle
                 case .consumable:
-                    let total = product.price * Decimal(viewModel.consumableQuantity)
+                    let total = product.price * Decimal(consumableQuantity)
                     return configuration.actionButton.consumableTitle + " (\(total.formatted(product.priceFormatStyle)))"
                 case .nonConsumable:
                     fallthrough
@@ -64,7 +68,7 @@ public struct PaywallView: View {
             return .gray
         } else if viewModel.products.isEmpty && viewModel.isProductLoading {
             return .gray
-        } else if let selectedProductId = viewModel.selectedProductId,
+        } else if let selectedProductId = selectedProductId,
                   viewModel.products.contains(where: { $0.id == selectedProductId }) {
             return configuration.foregroundColor.swiftUIColor
         } else {
@@ -119,17 +123,17 @@ public struct PaywallView: View {
                         }
 
                         // Products
-                        if !viewModel.isProductLoading, viewModel.productLoadingErrorAlert.isShow {
-                            Text(viewModel.productLoadingErrorAlert.title)
+                        if !viewModel.isProductLoading, productLoadingErrorAlert.isShow {
+                            Text(productLoadingErrorAlert.title)
                                 .font(configuration.actionButton.font.withSize(20).swiftUIFont.weight(.bold))
-                            Text(viewModel.productLoadingErrorAlert.message)
+                            Text(productLoadingErrorAlert.message)
                                 .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.regular))
                         }
 
-                        if let selectedProductId = viewModel.selectedProductId,
+                        if let selectedProductId = selectedProductId,
                             let product = viewModel.products.first(where: { $0.id == selectedProductId }),
                            product.type == .consumable {
-                            Stepper("Quantity: \(viewModel.consumableQuantity)", value: $viewModel.consumableQuantity, in: 1...Int.max)
+                            Stepper("Quantity: \(consumableQuantity)", value: $consumableQuantity, in: 1...Int.max)
                                 .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
                         }
 
@@ -227,7 +231,7 @@ public struct PaywallView: View {
                 VStack {
                     Spacer()
                     VStack {
-                        if let selectedProductId = viewModel.selectedProductId,
+                        if let selectedProductId = selectedProductId,
                            let product = viewModel.products.first(where: { $0.id == selectedProductId }),
                            !product.isActive,
                            let subscription = product.subscription,
@@ -255,10 +259,10 @@ public struct PaywallView: View {
                     .padding()
                     .background(.ultraThinMaterial)
                     //                        .colorScheme(.light)
-                    .alert(viewModel.productPurchaseResultAlert.title, isPresented: $viewModel.productPurchaseResultAlert.isShow, actions: {
-                        Button(viewModel.productPurchaseResultAlert.buttonTitle, action: {})
+                    .alert(productPurchaseResultAlert.title, isPresented: $productPurchaseResultAlert.isShow, actions: {
+                        Button(productPurchaseResultAlert.buttonTitle, action: {})
                     }, message: {
-                        Text(viewModel.productPurchaseResultAlert.message)
+                        Text(productPurchaseResultAlert.message)
                     })
                 }
             }
@@ -298,7 +302,7 @@ public struct PaywallView: View {
             if newValue == false {
                 //User dismissed the manage subscription screen, let's see if user has changed something or not
                 Task {
-                    await StoreKitManager.shared.refreshStatuses()
+                    await IQPurchaseKit.shared.refreshStatuses()
                 }
             }
         })
@@ -309,30 +313,38 @@ public struct PaywallView: View {
     }
 
     private func fetchProducts() async {
-        await viewModel.fetchProducts(productIds: configuration.productIds)
+        productLoadingErrorAlert.hide()
 
-        if viewModel.selectedProductId == nil {
-            if let currentPlan = viewModel.products.first(where: { $0.status == .active}) {
-                viewModel.selectedProductId = currentPlan.id
-            } else {
-                viewModel.selectedProductId = configuration.recommendedProductId
+        do {
+            try await viewModel.fetchProducts(productIds: configuration.productIds)
+
+            if selectedProductId == nil {
+                if let currentPlan = viewModel.products.first(where: { $0.status == .active}) {
+                    selectedProductId = currentPlan.id
+                } else {
+                    selectedProductId = configuration.recommendedProductId
+                }
             }
+        } catch {
+            productLoadingErrorAlert.show(title: "Error", message: error.localizedDescription)
         }
     }
 
     private func subscribeAction() {
-        guard let selectedProductId = viewModel.selectedProductId else {
+        guard let selectedProductId = selectedProductId else {
             HapticGenerator.shared.error()
             return
         }
         HapticGenerator.shared.softImpact()
+        productPurchaseResultAlert.hide()
 
         if let product = viewModel.products.first(where: { $0.id == selectedProductId }),
            product.status != .inactive {
             showManageSubscription = true
-        } else if let product = StoreKitManager.shared.product(withID: selectedProductId) {
+        } else if let product = viewModel.products.first(where: { $0.id == selectedProductId }) {
             Task {
-                await viewModel.purchase(product: product)
+                let result = await viewModel.purchase(product: product, quantity: consumableQuantity)
+                handlePurchaseResult(result, isRestore: false)
             }
         }
     }
@@ -344,9 +356,42 @@ public struct PaywallView: View {
 
     private func restorePurchaseAction() {
         HapticGenerator.shared.softImpact()
+        productPurchaseResultAlert.hide()
 
         Task {
-            await viewModel.restorePurchases()
+            let result = await viewModel.restorePurchases()
+            handlePurchaseResult(result, isRestore: true)
+        }
+    }
+
+    private func handlePurchaseResult(_ result: PurchaseState, isRestore: Bool) {
+        switch result {
+        case .success:
+            HapticGenerator.shared.success()
+            if isRestore {
+                productPurchaseResultAlert.show(title: "Restored", message: "Purchase Restored completed successfully!")
+            } else {
+                productPurchaseResultAlert.show(title: "Success", message: "Purchase completed successfully!")
+            }
+        case .restored:
+            HapticGenerator.shared.success()
+            productPurchaseResultAlert.show(title: "Restored", message: "Purchase Restored completed successfully!")
+        case .pending:
+            HapticGenerator.shared.warning()
+            if isRestore {
+                productPurchaseResultAlert.show(title: "Purchase Restored Pending", message: "Purchase is Pending to be Completed. You may need to take additional steps to complete the purchase.")
+            } else {
+                productPurchaseResultAlert.show(title: "Purchase Pending", message: "Purchase is Pending to be Completed. You may need to take additional steps to complete the purchase.")
+            }
+        case .userCancelled:
+            break
+        case .failure(let error):
+            HapticGenerator.shared.error()
+            if isRestore {
+                productPurchaseResultAlert.show(title: "Purchase Restoration Failed", message: error.localizedDescription)
+            } else {
+                productPurchaseResultAlert.show(title: "Purchase Failed", message: error.localizedDescription)
+            }
         }
     }
 
@@ -369,7 +414,7 @@ public struct PaywallView: View {
         switch result {
         case .success:
             Task {
-                await StoreKitManager.shared.refreshStatuses()
+                await IQPurchaseKit.shared.refreshStatuses()
             }
             HapticGenerator.shared.success()
         case .failure:
@@ -399,7 +444,7 @@ extension PaywallView {
                 CardProductView(product: product,
                                 productStyle: productStyle,
                                 configuration: configuration,
-                                selectedProductId: $viewModel.selectedProductId,
+                                selectedProductId: $selectedProductId,
                                 isOnlyAvailableProduct: configuration.productIds.count <= 1
                 )
             }
@@ -415,7 +460,7 @@ extension PaywallView {
                 ListProductView(product: product,
                                 productStyle: productStyle,
                                 configuration: configuration,
-                                selectedProductId: $viewModel.selectedProductId,
+                                selectedProductId: $selectedProductId,
                 )
             }
         }

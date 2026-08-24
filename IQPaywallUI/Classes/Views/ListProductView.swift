@@ -3,6 +3,7 @@
 
 import SwiftUI
 import StoreKit
+import IQPurchaseKit
 
 internal struct ListProductView: View {
 

@@ -7,7 +7,7 @@
 
 import UIKit
 import IQPaywallUI
-import IQStoreKitManager
+import IQPurchaseKit
 import SwiftUI
 
 class TableViewController: UITableViewController {

@@ -1,9 +1,9 @@
 {
     "name": "IQPaywallUI",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "source": {
         "git": "https://github.com/hackiftekhar/IQPaywallUI.git",
-        "tag": "0.0.1"
+        "tag": "1.0.0"
     },
     "summary": "Paywall Screen",
     "description": "This contains Paywall screen which you can use directly to integrate in app purchase basic features.",
@@ -28,7 +28,7 @@
         "IQPaywallUI/Classes/**/*.{swift}"
     ],
     "dependencies": {
-        "IQStoreKitManager": []
+        "IQPurchaseKit": []
     },
     "resource_bundles": {
         "IQPaywallUI": "IQPaywallUI/Assets/**/*"

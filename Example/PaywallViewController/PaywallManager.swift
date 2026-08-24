@@ -9,7 +9,7 @@
 import UIKit
 import SwiftUI
 import IQPaywallUI
-import IQStoreKitManager
+import IQPurchaseKit
 import StoreKit
 
 @objc
@@ -268,8 +268,8 @@ private extension PaywallManager {
 //    }
 }
 
-extension PaywallManager: StoreKitManagerDelegate {
-    func generateSignature(product: StoreKit.Product, offerID: String, appAccountToken: UUID?, completion: @escaping (Result<IQStoreKitManager.OfferSignature, any Error>) -> Void) {
+extension PaywallManager: IQPurchaseKitDelegate {
+    func generateSignature(product: StoreKit.Product, offerID: String, appAccountToken: UUID?, completion: @escaping (Result<OfferSignature, any Error>) -> Void) {
     }
 
     func deliver(product: StoreKit.Product,
