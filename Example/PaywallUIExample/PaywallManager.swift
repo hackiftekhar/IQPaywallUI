@@ -41,7 +41,7 @@ final class PaywallManager: NSObject {
 
     @objc
     func configure() {
-        IQPaywallUI.configure(productIds: ProductIdentifier.allCases.map({ $0.rawValue }), delegate: self)
+        PurchaseKit.shared.configure(productIDs: ProductIdentifier.allCases.map({ $0.rawValue }), delegate: self)
     }
 
     func paywallView() -> some View {
@@ -268,7 +268,7 @@ private extension PaywallManager {
 //    }
 }
 
-extension PaywallManager: IQPurchaseKitDelegate {
+extension PaywallManager: PurchaseKitDelegate {
     func generateSignature(product: StoreKit.Product, offerID: String, appAccountToken: UUID?, completion: @escaping (Result<OfferSignature, any Error>) -> Void) {
     }
 

@@ -51,42 +51,21 @@ internal struct ListProductView: View {
                         }
                         Spacer()
                     }
-                    
+
                     Text(product.description)
                         .multilineTextAlignment(.leading)
                         .font(productStyle.descriptionStyle.font.swiftUIFont)
                         .foregroundColor(descriptionColor)
                         .truncationMode(.tail)
-                    
-                    if !product.isActive,
-                       let subscription = product.subscription,
-                       let introOffer = subscription.introductoryOffer,
-                       product.isEligibleForIntroOffer {
-                        VStack(alignment: .leading) {
-                            Text(introOffer.localizedDescription)
-                                .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
-                                .foregroundColor(subscriptionPeriodColor)
-                        }
-                    }
                 }
-                VStack(alignment: .trailing) {
-                    Text(product.displayPrice)
-                        .font(productStyle.priceStyle.font.swiftUIFont)
-                        .foregroundColor(priceForegroundColor)
-                        .strikethrough(product.isEligibleForIntroOffer && product.discountedDisplayPrice != nil)
 
-                    if product.isEligibleForIntroOffer, let discountedDisplayPrice = product.discountedDisplayPrice {
-                        Text(discountedDisplayPrice)
-                            .font(productStyle.priceStyle.font.swiftUIFont)
-                            .foregroundColor(priceForegroundColor)
-                    }
-
-                    if let periodDescription = product.subscriptionPeriodDescription {
-                        Text(periodDescription)
-                            .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
-                            .foregroundColor(subscriptionPeriodColor)
-                    }
-                }
+                ProductPriceColumn(
+                    product: product,
+                    productStyle: productStyle,
+                    alignment: .trailing,
+                    priceColor: priceForegroundColor,
+                    periodColor: subscriptionPeriodColor
+                )
             }
         }
         .padding()

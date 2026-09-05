@@ -40,22 +40,13 @@ internal struct CardProductView: View {
                     .font(productStyle.nameStyle.font.swiftUIFont)
                     .foregroundColor(titleForegroundColor)
 
-                Text(product.displayPrice)
-                    .font(productStyle.priceStyle.font.swiftUIFont)
-                    .foregroundColor(priceForegroundColor)
-                    .strikethrough(product.isEligibleForIntroOffer && product.discountedDisplayPrice != nil)
-
-                if product.isEligibleForIntroOffer, let discountedDisplayPrice = product.discountedDisplayPrice {
-                    Text(discountedDisplayPrice)
-                        .font(productStyle.priceStyle.font.swiftUIFont)
-                        .foregroundColor(priceForegroundColor)
-                }
-
-                if let periodDescription = product.subscriptionPeriodDescription {
-                    Text(periodDescription)
-                        .font(productStyle.subscriptionPeriodStyle.font.swiftUIFont)
-                        .foregroundColor(subscriptionPeriodColor)
-                }
+                ProductPriceColumn(
+                    product: product,
+                    productStyle: productStyle,
+                    alignment: .leading,
+                    priceColor: priceForegroundColor,
+                    periodColor: subscriptionPeriodColor
+                )
 
                 Text(product.description)
                     .lineLimit(5)
@@ -67,7 +58,7 @@ internal struct CardProductView: View {
             .padding(5)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 220)
+        .frame(minHeight: 220)
         .background(
             RoundedRectangle(cornerRadius: 25)
                 .stroke(configuration.foregroundColor.swiftUIColor, lineWidth: 1)

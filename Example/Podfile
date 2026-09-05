@@ -2,7 +2,7 @@ use_frameworks!
 
 platform :ios, '15.0'
 
-target 'PaywallViewController' do
+target 'PaywallUIExample' do
   pod 'IQPaywallUI', :path => '../'
   pod 'IQPurchaseKit', :path => '../../IQPurchaseKit'
 

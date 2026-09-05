@@ -1,6 +1,6 @@
 //
 //  SceneDelegate.swift
-//  PaywallViewController
+//  PaywallUIExample
 //
 //  Created by Iftekhar on 11/14/25.
 //
