@@ -24,10 +24,32 @@ class TableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureProductStyleMenu()
         updateProductStatuses()
         NotificationCenter.default.addObserver(forName: PaywallManager.purchaseStatusDidChangedNotification, object: nil, queue: nil) { _ in
             self.updateProductStatuses()
         }
+    }
+
+    private func configureProductStyleMenu() {
+        let currentStyle = PaywallManager.shared.productStyle
+
+        let cardAction = UIAction(title: "Card",
+                                  image: UIImage(systemName: "rectangle.on.rectangle"),
+                                  state: currentStyle == .card ? .on : .off) { [weak self] _ in
+            PaywallManager.shared.productStyle = .card
+            self?.configureProductStyleMenu()
+        }
+
+        let listAction = UIAction(title: "List",
+                                  image: UIImage(systemName: "list.bullet"),
+                                  state: currentStyle == .list ? .on : .off) { [weak self] _ in
+            PaywallManager.shared.productStyle = .list
+            self?.configureProductStyleMenu()
+        }
+
+        let menu = UIMenu(title: "Product Style", options: .singleSelection, children: [cardAction, listAction])
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Style", menu: menu)
     }
 
     override func viewWillAppear(_ animated: Bool) {

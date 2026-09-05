@@ -44,6 +44,28 @@ final class PaywallManager: NSObject {
         PurchaseKit.shared.configure(productIDs: ProductIdentifier.allCases.map({ $0.rawValue }), delegate: self)
     }
 
+    var productStyle: PaywallConfiguration.Product.Style {
+        get {
+            switch UserDefaults.standard.string(forKey: "productStyle") {
+            case "list":
+                return .list
+            default:
+                return .card
+            }
+        }
+        set {
+            let value: String
+            switch newValue {
+            case .list:
+                value = "list"
+            case .card:
+                value = "card"
+            }
+            UserDefaults.standard.set(value, forKey: "productStyle")
+            UserDefaults.standard.synchronize()
+        }
+    }
+
     func paywallView() -> some View {
         PaywallView(configuration: configuration)
     }
@@ -221,7 +243,7 @@ private extension PaywallManager {
                                                      icon: .init(UIImage(systemName: "checkmark.circle.fill")!, color: foregroundColor),
                                                      style: .init(font: regular15, color: foregroundColor))))
 
-        configuration.elements.append(.product(.init(style: .card,
+        configuration.elements.append(.product(.init(style: productStyle,
                                                      nameStyle: .init(font: semibold20, color: foregroundColor),
                                                      priceStyle: .init(font: semibold20, color: foregroundColor),
                                                      subscriptionPeriodStyle: .init(font: light12, color: foregroundColor),
