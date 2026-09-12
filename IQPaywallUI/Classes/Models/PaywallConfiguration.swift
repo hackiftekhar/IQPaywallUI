@@ -1,6 +1,9 @@
 //
 //  PaywallConfiguration.swift
 
+import UIKit
+import IQPurchaseKit
+
 public struct PaywallConfiguration {
 
     public var elements: [Element]
@@ -9,6 +12,7 @@ public struct PaywallConfiguration {
     public var recommendedProductId: String?
 
     public var actionButton: ActionButton
+    public var textFormatting: any PaywallTextFormatting
 
     public var backgroundColor: UIColor
     public var foregroundColor: UIColor
@@ -21,6 +25,7 @@ public struct PaywallConfiguration {
                 recommendedProductId: String? = nil,
                 elements: [Element] = [],
                 actionButton: ActionButton = .init(),
+                textFormatting: any PaywallTextFormatting = DefaultPaywallTextFormatting(),
                 backgroundColor: UIColor = UIColor.systemBackground,
                 foregroundColor: UIColor = UIColor.systemBlue,
                 linkStyle: LabelStyle = .init(font: UIFont.preferredFont(forTextStyle: .footnote)),
@@ -29,6 +34,7 @@ public struct PaywallConfiguration {
         self.recommendedProductId = recommendedProductId
         self.elements = elements
         self.actionButton = actionButton
+        self.textFormatting = textFormatting
         self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
         self.linkStyle = linkStyle
@@ -134,21 +140,9 @@ extension PaywallConfiguration {
     }
 
     public struct ActionButton {
-        public var nonRenewTitle: String
-        public var autoRenewTitle: String
-        public var consumableTitle: String
-        public var nonConsumableTitle: String
         public var font: UIFont
 
-        public init(nonRenewTitle: String = "Subscribe",
-                    autoRenewTitle: String = "Subscribe",
-                    consumableTitle: String = "Buy Now",
-                    nonConsumableTitle: String = "Unlock Now",
-                    font: UIFont = .preferredFont(forTextStyle: .body)) {
-            self.nonRenewTitle = nonRenewTitle
-            self.autoRenewTitle = autoRenewTitle
-            self.consumableTitle = consumableTitle
-            self.nonConsumableTitle = nonConsumableTitle
+        public init(font: UIFont = .preferredFont(forTextStyle: .body)) {
             self.font = font
         }
     }

@@ -45,7 +45,7 @@ internal struct ListProductView: View {
                             .font(productStyle.nameStyle.font.swiftUIFont)
                             .foregroundColor(titleForegroundColor)
                         if product.status != .inactive {
-                            Text("(\(product.status.displayName))")
+                            Text("(\(configuration.textFormatting.activeBadgeTitle(for: product)))")
                                 .font(productStyle.descriptionStyle.font.swiftUIFont)
                                 .foregroundColor(descriptionColor)
                         }
@@ -62,6 +62,7 @@ internal struct ListProductView: View {
                 ProductPriceColumn(
                     product: product,
                     productStyle: productStyle,
+                    textFormatting: configuration.textFormatting,
                     alignment: .trailing,
                     priceColor: priceForegroundColor,
                     periodColor: subscriptionPeriodColor

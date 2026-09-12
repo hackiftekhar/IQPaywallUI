@@ -43,6 +43,7 @@ internal struct CardProductView: View {
                 ProductPriceColumn(
                     product: product,
                     productStyle: productStyle,
+                    textFormatting: configuration.textFormatting,
                     alignment: .leading,
                     priceColor: priceForegroundColor,
                     periodColor: subscriptionPeriodColor
@@ -70,7 +71,7 @@ internal struct CardProductView: View {
         )
         .overlay(alignment: .top) {
             if product.status != .inactive {
-                Text(product.status.displayName)
+                Text(configuration.textFormatting.activeBadgeTitle(for: product))
                     .font(productStyle.nameStyle.font.withSize(10).swiftUIFont)
                     .foregroundColor(product.id == selectedProductId ? configuration.foregroundColor.swiftUIColor : configuration.backgroundColor.swiftUIColor)
                     .padding(.horizontal, 10)

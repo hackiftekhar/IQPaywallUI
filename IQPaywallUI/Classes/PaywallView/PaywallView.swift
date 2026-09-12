@@ -21,55 +21,37 @@ public struct PaywallView: View {
 
     private let configuration: PaywallConfiguration
 
+    private var textFormatting: any PaywallTextFormatting {
+        configuration.textFormatting
+    }
+
     public init(configuration: PaywallConfiguration) {
         self.configuration = configuration
     }
 
+    private var selectedProduct: ProductInfo? {
+        guard let selectedProductId else { return nil }
+        return viewModel.products.first(where: { $0.id == selectedProductId })
+    }
+
+    private var isLoadingEmptyProducts: Bool {
+        viewModel.isProductLoading && viewModel.products.isEmpty
+    }
+
     private var callToActionTitle: String {
-        if viewModel.isProductPurchasing {
-            return String(localized: "Please wait...")
-        }
-
-        if viewModel.isProductLoading && viewModel.products.isEmpty {
-            return String(localized: "Loading...")
-        }
-
-        guard let product = selectedProductId,
-              let product = viewModel.products.first(where: { $0.id == selectedProductId }) else {
-            return String(localized: "Choose your plan")
-        }
-
-        if product.isActive {
-            if product.type == .autoRenewable || product.type == .nonRenewable {
-                return String(localized: "Manage Subscription")
-            } else {
-                return String(localized: "Unlocked")
-            }
-        }
-
-        if product.shouldDisplayIntroductoryOffer {
-            return product.subscribeActionTitle
-        }
-
-        return "\(String(localized: "Subscribe")) \(product.price.formatted(product.priceFormatStyle))"
+        textFormatting.callToActionTitle(
+            selectedProduct: selectedProduct,
+            isPurchasing: viewModel.isProductPurchasing,
+            isLoadingEmptyProducts: isLoadingEmptyProducts
+        )
     }
 
     private var callToActionSubtitle: String? {
-        if viewModel.isProductPurchasing ||
-            (viewModel.isProductLoading && viewModel.products.isEmpty) {
-            return nil
-        }
-
-        guard let product = selectedProductId,
-              let product = viewModel.products.first(where: { $0.id == selectedProductId }), !product.isActive else {
-            return nil
-        }
-
-        if product.shouldDisplayIntroductoryOffer {
-            return product.subscribeActionSubtitle
-        }
-
-        return product.subscriptionPeriodDescription
+        textFormatting.callToActionSubtitle(
+            selectedProduct: selectedProduct,
+            isPurchasing: viewModel.isProductPurchasing,
+            isLoadingEmptyProducts: isLoadingEmptyProducts
+        )
     }
 
     private var callToActionBackground: Color {
@@ -118,12 +100,6 @@ public struct PaywallView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             case .product(let productStyle):
                                 productView(productStyle: productStyle)
-//                                let newProductStyle: PaywallConfiguration.Product = {
-//                                    var style = productStyle
-//                                    style.style = .list
-//                                    return style
-//                                }()
-//                                productView(productStyle: newProductStyle)
                             }
                         }
 
@@ -141,67 +117,12 @@ public struct PaywallView: View {
 
                         if let currentPlan = viewModel.products.first(where: { $0.status == .active })?.snapshot,
                            let renewalInfo = currentPlan.renewalInfo?.info {
-                            let dateString = renewalInfo.date?.formatted(.dateTime.hour().minute().month().day().year()) ?? ""
-
-                            VStack(spacing: 4) {
-                                switch currentPlan.type {
-                                case .consumable, .nonConsumable:
-                                    EmptyView()
-                                case .autoRenewable:
-                                    switch currentPlan.status {
-                                    case .active, .upcoming:
-                                        if renewalInfo.currentProductID == renewalInfo.nextProductID {
-                                            Text("'\(currentPlan.displayName)' Renews Automatically")
-                                                .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
-                                            Text("Your subscription will renew on \(dateString)")
-                                                .multilineTextAlignment(.leading)
-                                                .foregroundStyle(.secondary)
-                                        } else if let nextProductID = renewalInfo.nextProductID, renewalInfo.currentProductID != nextProductID {
-                                            let nextPlanName = PurchaseStatusManager.shared.snapshot(for: nextProductID)?.displayName ?? nextProductID
-                                            Text("Upcoming Plan Change")
-                                                .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
-                                            Text("Starting \(dateString), your plan will change from '\(currentPlan.displayName)' to '\(nextPlanName)'")
-                                                .multilineTextAlignment(.leading)
-                                                .foregroundStyle(.secondary)
-                                        } else {
-                                            Text("'\(currentPlan.displayName)' Subscription Cancelled")
-                                                .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
-                                            Text("Your subscription will remain active until \(dateString)")
-                                                .multilineTextAlignment(.leading)
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    case .inactive, .unlocked:
-                                        EmptyView()
-                                    case .gracePeriod:
-                                        Text("Payment Issue")
-                                            .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
-                                        Text("We couldn't process your payment. Your '\(currentPlan.displayName)' subscription remains active until \(dateString). Please update your payment method to avoid losing access.")
-                                            .multilineTextAlignment(.leading)
-                                            .foregroundStyle(.secondary)
-                                    case .billingRetryPeriod:
-                                        Text("Payment Issue")
-                                            .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
-                                        Text("We couldn't process your payment for your '\(currentPlan.displayName)' subscription. Apple is retrying the payment. Please update your payment method to restore your subscription.")
-                                            .multilineTextAlignment(.leading)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                case .nonRenewable:
-                                    Text("'\(currentPlan.displayName)' Active")
-                                        .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
-                                    Text("Your subscription will remain active until \(dateString)")
-                                        .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .multilineTextAlignment(.center)
-                            .font(configuration.actionButton.font.withSize(12).swiftUIFont.weight(.regular))
-                            .foregroundStyle(configuration.foregroundColor.swiftUIColor)
+                            subscriptionStatusView(currentPlan: currentPlan, renewalInfo: renewalInfo)
                         }
 
                         if viewModel.products.contains(where: { $0.type == .autoRenewable || $0.type == .nonRenewable }) {
                             Button(action: manageSubscriptionAction) {
-                                Text("Manage Subscriptions")
+                                Text(textFormatting.manageSubscriptionTitle())
                                     .font(configuration.linkStyle.font.swiftUIFont)
                                     .foregroundStyle(configuration.linkStyle.color?.swiftUIColor ?? Color.blue)
                             }
@@ -212,7 +133,7 @@ public struct PaywallView: View {
 
                         if configuration.canRedeemOfferCode {
                             Button(action: { showOfferCode = true }) {
-                                Text("Redeem Offer Code")
+                                Text(textFormatting.redeemCodeTitle())
                                     .font(configuration.linkStyle.font.swiftUIFont)
                                     .foregroundStyle(configuration.linkStyle.color?.swiftUIColor ?? Color.blue)
                             }
@@ -276,7 +197,6 @@ public struct PaywallView: View {
                     }
                     .padding()
                     .background(.ultraThinMaterial)
-                    //                        .colorScheme(.light)
                     .alert(productPurchaseResultAlert.title, isPresented: $productPurchaseResultAlert.isShow, actions: {
                         Button(productPurchaseResultAlert.buttonTitle, action: {})
                     }, message: {
@@ -305,7 +225,7 @@ public struct PaywallView: View {
             .toolbar {
 
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Restore", action: restorePurchaseAction)
+                    Button(textFormatting.restorePurchasesTitle(), action: restorePurchaseAction)
                         .disabled(viewModel.isProductPurchasing)
                 }
 
@@ -333,6 +253,35 @@ public struct PaywallView: View {
         .navigationViewStyle(.stack)
     }
 
+    @ViewBuilder
+    private func subscriptionStatusView(currentPlan: ProductStatus, renewalInfo: RenewalStatus.Info) -> some View {
+        let nextPlanDisplayName: String? = {
+            guard let nextProductID = renewalInfo.nextProductID,
+                  renewalInfo.currentProductID != nextProductID else {
+                return nil
+            }
+            return PurchaseStatusManager.shared.snapshot(for: nextProductID)?.displayName ?? nextProductID
+        }()
+
+        if let texts = textFormatting.subscriptionStatusTexts(
+            currentPlan: currentPlan,
+            renewalInfo: renewalInfo,
+            nextPlanDisplayName: nextPlanDisplayName
+        ) {
+            VStack(spacing: 4) {
+                Text(texts.title)
+                    .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.bold))
+                Text(texts.message)
+                    .multilineTextAlignment(.leading)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
+            .font(configuration.actionButton.font.withSize(12).swiftUIFont.weight(.regular))
+            .foregroundStyle(configuration.foregroundColor.swiftUIColor)
+        }
+    }
+
     private func fetchProducts() async {
         productLoadingErrorAlert.hide()
 
@@ -342,7 +291,10 @@ public struct PaywallView: View {
         } catch {
             selectDefaultProductIfNeeded()
             if viewModel.products.isEmpty {
-                productLoadingErrorAlert.show(title: "Error", message: error.localizedDescription)
+                productLoadingErrorAlert.show(
+                    title: textFormatting.plansErrorTitle(),
+                    message: error.localizedDescription
+                )
             }
         }
     }
@@ -366,6 +318,12 @@ public struct PaywallView: View {
     private func subscribeAction() {
         guard let selectedProductId = selectedProductId else {
             HapticGenerator.shared.error()
+            let alert = textFormatting.selectPlanAlert()
+            productPurchaseResultAlert.show(
+                title: alert.title,
+                message: alert.message,
+                buttonTitle: alert.buttonTitle
+            )
             return
         }
         HapticGenerator.shared.softImpact()
@@ -398,34 +356,26 @@ public struct PaywallView: View {
     }
 
     private func handlePurchaseResult(_ result: PurchaseState, isRestore: Bool) {
+        guard let alert = textFormatting.purchaseResultAlert(state: result, isRestore: isRestore) else {
+            return
+        }
+
         switch result {
-        case .success:
+        case .success(_), .restored:
             HapticGenerator.shared.success()
-            if isRestore {
-                productPurchaseResultAlert.show(title: "Restored", message: "Purchase Restored completed successfully!")
-            } else {
-                productPurchaseResultAlert.show(title: "Success", message: "Purchase completed successfully!")
-            }
-        case .restored:
-            HapticGenerator.shared.success()
-            productPurchaseResultAlert.show(title: "Restored", message: "Purchase Restored completed successfully!")
         case .pending:
             HapticGenerator.shared.warning()
-            if isRestore {
-                productPurchaseResultAlert.show(title: "Purchase Restored Pending", message: "Purchase is Pending to be Completed. You may need to take additional steps to complete the purchase.")
-            } else {
-                productPurchaseResultAlert.show(title: "Purchase Pending", message: "Purchase is Pending to be Completed. You may need to take additional steps to complete the purchase.")
-            }
+        case .failure(_):
+            HapticGenerator.shared.error()
         case .userCancelled:
             break
-        case .failure(let error):
-            HapticGenerator.shared.error()
-            if isRestore {
-                productPurchaseResultAlert.show(title: "Purchase Restoration Failed", message: error.localizedDescription)
-            } else {
-                productPurchaseResultAlert.show(title: "Purchase Failed", message: error.localizedDescription)
-            }
         }
+
+        productPurchaseResultAlert.show(
+            title: alert.title,
+            message: alert.message,
+            buttonTitle: alert.buttonTitle
+        )
     }
 
     private func termsAndConditionAction() {
@@ -452,7 +402,6 @@ public struct PaywallView: View {
             HapticGenerator.shared.success()
         case .failure:
             break
-//            HapticGenerator.shared.error()
         }
     }
 }
@@ -494,7 +443,7 @@ extension PaywallView {
                 .font(configuration.actionButton.font.withSize(15).swiftUIFont.weight(.regular))
                 .multilineTextAlignment(.center)
             Button(action: retryFetchProducts) {
-                Text("Retry")
+                Text(textFormatting.retryButtonTitle())
                     .font(configuration.actionButton.font.withSize(16).swiftUIFont.weight(.semibold))
                     .padding(.horizontal, 28)
                     .padding(.vertical, 10)
@@ -541,7 +490,6 @@ extension PaywallView {
         var configuration = PaywallConfiguration()
         configuration.elements.append(.title(.init("Unlock Pro Features")))
         configuration.elements.append(.subtitle(.init("Get access to all our pro features")))
-//        configuration.elements.append(.appIcon(.init(UIImage(named:"ruler_logo")!)))
         configuration.elements.append(.feature(.init(titles: ["Remove all ads",
                                                               "Customize Color Themes",
                                                               "Unlock Pixel Ratio feature",
